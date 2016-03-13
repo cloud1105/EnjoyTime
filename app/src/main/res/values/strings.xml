@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">EnjoyTime</string>
+
+    <string name="navigation_drawer_open">Open</string>
+    <string name="navigation_drawer_close">Close</string>
+    <string name="ganhuo">Ganhuo</string>
+    <string name="favor">Favor</string>
+    <string name="about">About</string>
+    <string name="username">Leo Hu</string>
+    <string name="mail">756341423@qq.com</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_web_view">WebViewActivity</string>
+</resources>

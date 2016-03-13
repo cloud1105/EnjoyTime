@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/ganhuo"
+            android:icon="@drawable/ganhuo_menu_item"
+            android:title="@string/ganhuo" />
+        <item
+            android:id="@+id/favor"
+            android:icon="@drawable/fav_menu_item"
+            android:title="@string/favor" />
+        <item
+            android:id="@+id/about"
+            android:icon="@drawable/about_menu_item"
+            android:title="@string/about" />
+    </group>
+
+
+</menu>
