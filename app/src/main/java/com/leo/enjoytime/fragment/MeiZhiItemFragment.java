@@ -21,7 +21,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
-import com.leo.enjoytime.activity.BigImageViewActivity;
+import com.leo.enjoytime.activity.ImageViewActivity;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.model.Entry;
@@ -205,9 +205,15 @@ public class MeiZhiItemFragment extends Fragment {
         }, 200);
     }
 
+    @SuppressWarnings("unchecked")
     private void gotoBigMeizhi(String url) {
-        Intent intent = new Intent(getActivity(), BigImageViewActivity.class);
-        intent.putExtra(BigImageViewActivity.URL_PARAM,url);
+        Intent intent = new Intent(getActivity(), ImageViewActivity.class);
+        Bundle bundle = new Bundle();
+        ArrayList list = meizhiAdapter.getMeiZhiUrlList();
+        bundle.putString(ImageViewActivity.CURRENT_URL_PARAM,url);
+        bundle.putStringArrayList(ImageViewActivity.URLS_PARAM, list);
+        bundle.putInt(ImageViewActivity.INDEX, list.indexOf(url));
+        intent.putExtras(bundle);
         startActivity(intent);
     }
 
@@ -243,6 +249,15 @@ public class MeiZhiItemFragment extends Fragment {
         public void addItems(List<Entry> list) {
             entryList.addAll(list);
             notifyDataSetChanged();
+        }
+
+        public ArrayList getMeiZhiUrlList(){
+            ArrayList list = new ArrayList();
+            for (int i = 0;i<entryList.size();i++){
+               Entry entry = entryList.get(i);
+               list.add(i, entry.getUrl());
+            }
+            return list;
         }
 
         @Override
