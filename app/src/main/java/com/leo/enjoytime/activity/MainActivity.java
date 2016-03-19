@@ -26,11 +26,15 @@ public class MainActivity extends AppCompatActivity
 
     private ViewPager viewpager;
     private TabLayout tabLayout;
+
     public static final int GANHUO_COUNT = 3;
     public static final int ANDROID_TYPE = 0;
     public static final int IOS_TYPE = 1;
     public static final int MEIZHI_TYPE = 2;
 
+    private static final int PAGE_GANHUO = 1;
+    private static final int PAGE_GANCHAI = 2;
+    private int mCurrentPage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity
 
         //show by default
         showGanhuo();
+        mCurrentPage = PAGE_GANHUO;
     }
 
     @Override
@@ -101,8 +106,16 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.ganhuo) {
-            showGanhuo();
-        } else if (id == R.id.favor) {
+            if(mCurrentPage != PAGE_GANHUO) {
+                showGanhuo();
+                mCurrentPage = PAGE_GANHUO;
+            }
+        }else if (id == R.id.ganchai){
+            if (mCurrentPage != PAGE_GANCHAI){
+                showGanChai();
+                mCurrentPage = PAGE_GANCHAI;
+            }
+        }else if (id == R.id.favor) {
 
         } else if (id == R.id.about) {
 
@@ -110,6 +123,10 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void showGanChai() {
+
     }
 
     private void showGanhuo() {

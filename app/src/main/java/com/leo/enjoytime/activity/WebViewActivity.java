@@ -1,5 +1,6 @@
 package com.leo.enjoytime.activity;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.widget.ContentLoadingProgressBar;
@@ -19,6 +20,7 @@ public class WebViewActivity extends AppCompatActivity {
     public static final String URL_PARAM = "url";
     public static final String TAG = WebViewActivity.class.getSimpleName();
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +43,7 @@ public class WebViewActivity extends AppCompatActivity {
         //set settings
         webView.getSettings().setBuiltInZoomControls(true);
         webView.getSettings().setDisplayZoomControls(false);
+        webView.getSettings().setJavaScriptEnabled(true);
 
         webView.loadUrl(url);
 
@@ -79,7 +82,10 @@ public class WebViewActivity extends AppCompatActivity {
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
-
+            if (View.INVISIBLE == progressBar.getVisibility()) {
+                progressBar.setVisibility(View.VISIBLE);
+            }
+            setTitle(getString(R.string.loading));
         }
 
     }
@@ -102,6 +108,7 @@ public class WebViewActivity extends AppCompatActivity {
 
         @Override
         public void onReceivedTitle(WebView view, String title) {
+            setTitle(title);
             super.onReceivedTitle(view, title);
         }
     }

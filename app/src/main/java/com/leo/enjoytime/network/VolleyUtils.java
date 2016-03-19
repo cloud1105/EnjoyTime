@@ -40,7 +40,7 @@ public class VolleyUtils {
             case Const.REQUEST_TYPE_MEIZHI:
                 url = Const.MEIZHI_DATA_URL+count+"/"+page;
                 try {
-                    url = Const.HOST_URL+"/data/"+URLEncoder.encode("福利", "utf-8")+"/"+count+"/"+page;
+                    url = Const.GANHUO_HOST_URL +"/data/"+URLEncoder.encode("福利", "utf-8")+"/"+count+"/"+page;
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }

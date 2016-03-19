@@ -5,7 +5,13 @@
         <item
             android:id="@+id/ganhuo"
             android:icon="@drawable/ganhuo_menu_item"
+            android:checked="true"
             android:title="@string/ganhuo" />
+        <item
+            android:id="@+id/ganchai"
+            android:icon="@drawable/ganchai_menu_item"
+            android:checked="true"
+            android:title="@string/ganchai" />
         <item
             android:id="@+id/favor"
             android:icon="@drawable/fav_menu_item"

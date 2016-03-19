@@ -1,7 +1,6 @@
 package com.leo.enjoytime.fragment;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +12,7 @@ import com.leo.enjoytime.utils.ImageFileCacheUtils;
 
 import uk.co.senab.photoview.PhotoView;
 
-public class BigImageViewFragment extends Fragment {
+public class BigImageViewFragment extends BaseFragment {
     public final static String URL_PARAM = "url";
     public static final String TAG = BigImageViewFragment.class.getSimpleName();
     private PhotoView photoView;
