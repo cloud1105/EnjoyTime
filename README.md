@@ -1,9 +1,10 @@
 # EnjoyTime
 
 分享Android和IOS干货 还有各种福利图<br>
-api数据来自代码家的干货集中营<br>
-http://gank.io/<br>
 
+api数据来自
+代码家的干货集中营<br>
+http://gank.io/<br>
 干柴<br>
 https://github.com/openproject/ganchai<br>
 应用整体使用Material Design设计风格。<br>
