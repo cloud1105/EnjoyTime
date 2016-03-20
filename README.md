@@ -2,14 +2,14 @@
 
 分享Android和IOS干货 还有各种福利图<br>
 
-api数据来自
-代码家的干货集中营<br>
+api数据来自<br>
+-代码家的干货集中营<br>
 http://gank.io/<br>
-干柴<br>
+-干柴<br>
 https://github.com/openproject/ganchai<br>
 应用整体使用Material Design设计风格。<br>
 
-下载地址<br>
+app下载地址<br>
 http://fir.im/enjoytime<br>
 
 目前还处于初版 后续待完善<br>
