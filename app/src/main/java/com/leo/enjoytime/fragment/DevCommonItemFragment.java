@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -78,68 +79,81 @@ public class DevCommonItemFragment extends BaseFragment {
         if (getArguments() != null) {
             articleType = getArguments().getString(TYPE);
         }
-        responseListener = new Response.Listener<JSONObject>(){
+        responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                JSONArray array = new JSONArray();
-                try {
-                    String result = response.getString("error");
-                    if ("false".equals(result)) {
-                        array = response.getJSONArray("results");
-                    }else{
-                        Toast.makeText(getContext(),"没有更多数据了",Toast.LENGTH_SHORT).show();
-                        swipeRefreshLayout.setRefreshing(false);
-                        Log.e(TAG, "no more data");
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Log.e(TAG,"parse JSONObject error :"+e.getLocalizedMessage());
-                }
-                if (array.length() == 0){
-                    Toast.makeText(getContext(),"没有数据",Toast.LENGTH_SHORT).show();
-                    swipeRefreshLayout.setRefreshing(false);
-                    Log.e(TAG, "no data" );
-                    return;
-                }
-                List<Entry> list = new ArrayList<>();
-                for(int i=0;i<array.length();i++){
-                    JSONObject object;
-                    try {
-                        object = array.getJSONObject(i);
-                        Entry entry = new Entry();
-                        entry.setUrl(object.getString("url"));
-                        entry.setType(object.getString("type"));
-                        entry.setDesc(object.getString("desc"));
-                        entry.setCreate_at(object.getString("publishedAt"));
-                        entry.setFavor_flag(Const.UNLIKE);
-                        list.add(entry);
-                        if(dbManager.getDataByUrl(entry.getUrl()) == null){
-                             isNew = true;
-                             dbManager.insertData(entry);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                }
+                List<Entry> list = parseEntryList(response);
+                if (list == null) return;
                 adapter.addItems(list);
-                if(list.size() == Const.LIMIT_COUNT) {
+                if (list.size() == Const.LIMIT_COUNT) {
                     isLoadMore = true;
-                }else{
+                } else {
                     isLoadMore = false;
                 }
                 swipeRefreshLayout.setRefreshing(false);
 
             }
         };
-        errorListener = new Response.ErrorListener(){
+        errorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 swipeRefreshLayout.setRefreshing(false);
-                Toast.makeText(getContext(),"网络错误，请检查网络后重试",Toast.LENGTH_SHORT).show();
-                Log.e(TAG,"send volley request error, msg :"+error.getLocalizedMessage());
+                Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "send volley request error, msg :" + error.getLocalizedMessage());
             }
         };
+    }
+
+    @Nullable
+    private List<Entry> parseEntryList(JSONObject response) {
+        JSONArray array = new JSONArray();
+        array = parseJsonArrayFromUrlResponse(response, array);
+        if (array == null || array.length() == 0) return null;
+        List<Entry> list = new ArrayList<>();
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject object;
+            try {
+                object = array.getJSONObject(i);
+                Entry entry = new Entry();
+                entry.setUrl(object.getString("url"));
+                entry.setType(object.getString("type"));
+                entry.setDesc(object.getString("desc"));
+                entry.setCreate_at(object.getString("publishedAt"));
+                entry.setFavor_flag(Const.UNLIKE);
+                list.add(entry);
+                if (dbManager.getDataByUrl(entry.getUrl()) == null) {
+                    isNew = true;
+                    dbManager.insertData(entry);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return list;
+    }
+
+    @Nullable
+    private JSONArray parseJsonArrayFromUrlResponse(JSONObject response, JSONArray array) {
+        try {
+            String result = response.getString("error");
+            if ("false".equals(result)) {
+                array = response.getJSONArray("results");
+            } else {
+                Toast.makeText(getContext(), "没有更多数据了", Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
+                Log.e(TAG, "no more data");
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "parse JSONObject error :" + e.getLocalizedMessage());
+        }
+        if (array.length() == 0) {
+            Toast.makeText(getContext(), "没有数据", Toast.LENGTH_SHORT).show();
+            swipeRefreshLayout.setRefreshing(false);
+            Log.e(TAG, "no data");
+            return null;
+        }
+        return array;
     }
 
 
@@ -187,9 +201,9 @@ public class DevCommonItemFragment extends BaseFragment {
     }
 
     private void gotoWebView(String url) {
-        Intent intent= new Intent();
+        Intent intent = new Intent();
         intent.setAction("com.leo.enjoytime.VIEW");
-        intent.putExtra(WebViewActivity.URL_PARAM,url);
+        intent.putExtra(WebViewActivity.URL_PARAM, url);
         startActivity(intent);
     }
 
@@ -197,13 +211,12 @@ public class DevCommonItemFragment extends BaseFragment {
         if (isNew) {
             adapter.clearList();
             hasLoadPage = 1;
-        }else{
+        } else {
             hasLoadPage++;
         }
         VolleyUtils.queryGanhuo(TAG, articleType, hasLoadPage, Const.LIMIT_COUNT,
                 responseListener, errorListener);
     }
-
 
 
     @Override
@@ -220,8 +233,8 @@ public class DevCommonItemFragment extends BaseFragment {
                 } else if (direction == SwipyRefreshLayoutDirection.BOTTOM) {
                     if (isLoadMore) {
                         loadNewData(false);
-                    }else{
-                        Snackbar.make(rootView,"没有更多数据了",Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        Snackbar.make(rootView, "没有更多数据了", Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -255,7 +268,7 @@ public class DevCommonItemFragment extends BaseFragment {
             this.context = context;
         }
 
-        public void clearList(){
+        public void clearList() {
             entryList.clear();
         }
 
@@ -303,7 +316,7 @@ public class DevCommonItemFragment extends BaseFragment {
             private TextView date;
             private LikeButton likeButton;
 
-            void bindData(Entry entry){
+            void bindData(Entry entry) {
                 String dateStr = entry.getCreate_at();
                 String text = entry.getDesc();
                 Date temp = Utils.formatDateFromStr(dateStr);

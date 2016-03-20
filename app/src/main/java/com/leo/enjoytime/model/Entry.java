@@ -13,17 +13,45 @@ public class Entry {
     private String create_at;
     private String desc;
     private int favor_flag;
-
-    public Entry(String type, String url, String create_at, String desc, int favor_flag) {
-        this.type = type;
-        this.url = url;
-        this.create_at = create_at;
-        this.desc = desc;
-        this.favor_flag = favor_flag;
-    }
+    private int digest_id;
+    private String thumb_nail;
+    private String title;
+    private String summary;
 
     public Entry() {
 
+    }
+
+    public int getDigest_id() {
+        return digest_id;
+    }
+
+    public void setDigest_id(int digest_id) {
+        this.digest_id = digest_id;
+    }
+
+    public String getThumb_nail() {
+        return thumb_nail;
+    }
+
+    public void setThumb_nail(String thumb_nail) {
+        this.thumb_nail = thumb_nail;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getType() {

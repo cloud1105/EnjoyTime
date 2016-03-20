@@ -10,8 +10,8 @@
     <string name="username">Leo Hu</string>
     <string name="mail">756341423@qq.com</string>
     <string name="action_settings">Settings</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="viewpager_indicator">%1$d/%2$d</string>
     <string name="loading">载入网页中...</string>
+    <string name="snackbar_new_msg">已更新最新数据</string>
+
 </resources>

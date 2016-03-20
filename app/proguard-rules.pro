@@ -15,3 +15,5 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontwarn com.github.moduth.blockcanary.ui.*
+-keep class com.github.moduth.blockcanary.ui.*

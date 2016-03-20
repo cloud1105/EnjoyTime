@@ -4,9 +4,7 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -17,9 +15,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.leo.enjoytime.R;
-import com.leo.enjoytime.contant.Const;
-import com.leo.enjoytime.fragment.DevCommonItemFragment;
-import com.leo.enjoytime.fragment.MeiZhiItemFragment;
+import com.leo.enjoytime.adapter.GanChaiFragmentPagerAdapter;
+import com.leo.enjoytime.adapter.GanhuoFragmentPagerAdapter;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -28,9 +25,7 @@ public class MainActivity extends AppCompatActivity
     private TabLayout tabLayout;
 
     public static final int GANHUO_COUNT = 3;
-    public static final int ANDROID_TYPE = 0;
-    public static final int IOS_TYPE = 1;
-    public static final int MEIZHI_TYPE = 2;
+    public static final int GANCHAI_COUNT = 2;
 
     private static final int PAGE_GANHUO = 1;
     private static final int PAGE_GANCHAI = 2;
@@ -53,15 +48,18 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        if (drawer != null) {
+            drawer.addDrawerListener(toggle);
+        }
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        if (navigationView != null) {
+            navigationView.setNavigationItemSelectedListener(this);
+        }
 
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         viewpager = (ViewPager) findViewById(R.id.pager);
-
         //show by default
         showGanhuo();
         mCurrentPage = PAGE_GANHUO;
@@ -70,7 +68,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
+        if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
@@ -121,59 +119,28 @@ public class MainActivity extends AppCompatActivity
 
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+        if (drawer != null) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
         return true;
     }
 
     private void showGanChai() {
-
+        GanChaiFragmentPagerAdapter adapter = new GanChaiFragmentPagerAdapter(getSupportFragmentManager());
+        changePageAdapter(adapter);
     }
 
     private void showGanhuo() {
         GanhuoFragmentPagerAdapter adapter =
                 new GanhuoFragmentPagerAdapter(getSupportFragmentManager());
-        viewpager.setAdapter(adapter);
-        tabLayout.setupWithViewPager(viewpager);
+        changePageAdapter(adapter);
     }
 
-    private class GanhuoFragmentPagerAdapter extends FragmentPagerAdapter {
-
-        public GanhuoFragmentPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            switch (position) {
-                case ANDROID_TYPE:
-                    return DevCommonItemFragment.newInstance(Const.REQUEST_TYPE_ANDROID);
-                case IOS_TYPE:
-                    return DevCommonItemFragment.newInstance(Const.REQUEST_TYPE_iOS);
-                case MEIZHI_TYPE:
-                    return new MeiZhiItemFragment();
-                default:
-                    return DevCommonItemFragment.newInstance(Const.REQUEST_TYPE_ANDROID);
-            }
-
-        }
-
-        @Override
-        public int getCount() {
-            return GANHUO_COUNT;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case ANDROID_TYPE:
-                    return Const.REQUEST_TYPE_ANDROID;
-                case IOS_TYPE:
-                    return Const.REQUEST_TYPE_iOS;
-                case MEIZHI_TYPE:
-                    return Const.REQUEST_TYPE_MEIZHI;
-                default:
-                    return Const.REQUEST_TYPE_ANDROID;
-            }
-        }
+    private void changePageAdapter(FragmentStatePagerAdapter adapter) {
+        /* Set current adapter to null */
+        viewpager.removeAllViews();
+        viewpager.setAdapter(null);
+        viewpager.setAdapter(adapter);
+        tabLayout.setupWithViewPager(viewpager);
     }
 }

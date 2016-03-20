@@ -106,6 +106,9 @@ public class MeiZhiItemFragment extends BaseFragment {
                 } else {
                     isLoadMore = false;
                 }
+                if (isNew){
+                    Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
+                }
                 refreshLayout.setRefreshing(false);
 
             }
