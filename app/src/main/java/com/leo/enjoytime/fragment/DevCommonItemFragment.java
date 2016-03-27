@@ -1,7 +1,6 @@
 package com.leo.enjoytime.fragment;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -20,7 +19,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
-import com.leo.enjoytime.activity.WebViewActivity;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.model.Entry;
@@ -175,7 +173,7 @@ public class DevCommonItemFragment extends BaseFragment {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        gotoWebView(entry.getUrl());
+                        Utils.gotoWebView(getActivity(),entry.getUrl());
                     }
                 });
             }
@@ -200,12 +198,6 @@ public class DevCommonItemFragment extends BaseFragment {
         recyclerView.setHasFixedSize(true);
     }
 
-    private void gotoWebView(String url) {
-        Intent intent = new Intent();
-        intent.setAction("com.leo.enjoytime.VIEW");
-        intent.putExtra(WebViewActivity.URL_PARAM, url);
-        startActivity(intent);
-    }
 
     private void loadNewData(boolean isNew) {
         if (isNew) {

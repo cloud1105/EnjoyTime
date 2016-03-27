@@ -12,6 +12,7 @@ import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.utils.BitmapCache;
 
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -71,6 +72,11 @@ public class VolleyUtils {
         imageView.setImageUrl(url, imageLoader);
     }
 
+    public static void queryRssPage(String tag,String url,Response.Listener<XmlPullParser> listener, Response.ErrorListener errorListener){
+        XMLRequest xmlRequest = new XMLRequest(url,listener,errorListener);
+        xmlRequest.setTag(tag);
+        queue.add(xmlRequest);
+    }
 
     public static void cancelQuery(String tag) {
         queue.cancelAll(tag);

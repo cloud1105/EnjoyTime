@@ -17,9 +17,18 @@ public class Entry {
     private String thumb_nail;
     private String title;
     private String summary;
+    private Class<?> intentActivity;
 
     public Entry() {
 
+    }
+
+    public Class<?> getIntentActivity() {
+        return intentActivity;
+    }
+
+    public void setIntentActivity(Class<?> intentActivity) {
+        this.intentActivity = intentActivity;
     }
 
     public int getDigest_id() {

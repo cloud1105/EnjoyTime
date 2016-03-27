@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<blog-list>
+    <item class="rss" >
+        <title>Android开发技术周报</title>
+        <description>Android开发技术周报</description>
+        <link>http://androidweekly.cn/rss/</link>
+    </item>
+    <item class="html">
+        <title>codeKK</title>
+        <description>开源项目源码分析</description>
+        <link>http://a.codekk.com/</link>
+    </item>
+    <item class="html">
+        <title>泡在网上的日子</title>
+        <description>泡在网上的日子</description>
+        <link>http://www.jcodecraeer.com/plus/list.php?tid=18</link>
+    </item>
+    <item class="rss">
+        <title>张明云的博客</title>
+        <description>技术博客</description>
+        <link>http://zmywly8866.github.io/pages/atom.xml</link>
+    </item>
+    <item class="atom">
+        <title>Android开发最佳实践</title>
+        <description>胡凯技术博客</description>
+        <link>http://hukai.me/atom.xml</link>
+    </item>
+    <item class="rss">
+        <title>开发技术前线</title>
+        <description>高质量技术文章的聚合网站</description>
+        <link>http://www.devtf.cn/?feed=rss2</link>
+    </item>
+    <item class="html">
+        <title>ReactiveX文档中文翻译</title>
+        <description>RxJava</description>
+        <link>https://mcxiaoke.gitbooks.io/rxdocs/content/</link>
+    </item>
+    <item class="atom">
+        <title>Xiaoke's Blog</title>
+        <description>未觉池塘春草梦，阶前梧叶已秋声</description>
+        <link>http://blog.mcxiaoke.com/atom.xml</link>
+    </item>
+    <item class="rss">
+        <title>MrPeak技术分享</title>
+        <description>技术博客</description>
+        <link>http://mrpeak.cn/feed.xml</link>
+    </item>
+    <item class="atom">
+        <title>lightSky‘Blog</title>
+        <description>技术博客</description>
+        <link>http://www.lightskystreet.com/atom.xml</link>
+    </item>
+    <item class="atom">
+        <title>Jason‘Blog</title>
+        <description>无他，但手熟耳</description>
+        <link>http://jiajixin.cn/atom.xml</link>
+    </item>
+    <item class="atom">
+        <title>IM XIE</title>
+        <description>代码如诗</description>
+        <link>http://imxie.cc/atom.xml</link>
+    </item>
+    <item class="html">
+        <title>Drakeet的个人博客</title>
+        <description>永远的黑历史</description>
+        <link>https://drakeet.me/category/technology/android</link>
+    </item>
+    <item class="html">
+        <title>Trinea</title>
+        <description>微信codek2, Focus on Android, Java, Open Source, Performance Optimization</description>
+        <link>http://www.trinea.cn/</link>
+    </item>
+    <item class="rss">
+        <title>In Coding</title>
+        <description>唯妹子和写作不可辜负！</description>
+        <link>http://sixwolf.net/feed.xml</link>
+    </item>
+    <item class="atom">
+        <title>Gracker</title>
+        <description>True mastery of any skill takes a lifetime</description>
+        <link>http://androidperformance.com/atom.xml</link>
+    </item>
+    <item class="rss">
+        <title>Srain</title>
+        <description>质有高低，境界不同。</description>
+        <link>http://www.liaohuqiu.net/rss.xml</link>
+    </item>
+    <item class="atom">
+        <title>程序亦非猿</title>
+        <description>Keep growing and keep sharing.</description>
+        <link>http://yifeiyuan.me/atom.xml</link>
+    </item>
+    <item class="atom">
+        <title>技术小黑屋</title>
+        <description>技术小黑屋</description>
+        <link>http://droidyue.com/atom.xml</link>
+    </item>
+    <item class="rss">
+        <title>云在千峰</title>
+        <description>About Java Android Web Dart etc …</description>
+        <link>http://blog.chengyunfeng.com/?feed=rss2</link>
+    </item>
+    <item class="atom">
+        <title>Android梦想特工队</title>
+        <description>当你的成功欲望足以和呼吸的欲望相媲美的时候你就会成功。</description>
+        <link>http://www.wxtlife.com/atom.xml</link>
+    </item>
+    <item class="atom">
+        <title>markzhai's home</title>
+        <description>白驹过隙 忽然而已</description>
+        <link>http://blog.zhaiyifan.cn/atom.xml</link>
+    </item>
+    <item class="atom">
+        <title>码农明明桑</title>
+        <description>技术路上的一些记录</description>
+        <link>http://blog.isming.me/atom.xml</link>
+    </item>
+    <item class="rss">
+        <title>鸿洋</title>
+        <description>生命不息，奋斗不止，万事起于忽微，量变引起质变</description>
+        <link>http://blog.csdn.net/lmj623565791/rss/list</link>
+    </item>
+    <item class="rss">
+        <title>任玉刚</title>
+        <description>有创新精神的Android技术分享者</description>
+        <link>http://blog.csdn.net/singwhatiwanna/rss/list</link>
+    </item>
+    <item class="rss">
+        <title>郭霖</title>
+        <description>每当你在感叹，如果有这样一个东西就好了的时候，请注意，其实这是你的机会</description>
+        <link>http://blog.csdn.net/guolin_blog/rss/list</link>
+    </item>
+    <item class="rss">
+        <title>AigeStudio</title>
+        <description>你所浪费的今天,是昨天死去的人奢望的明天;你所厌恶的现在,是未来的你回不去的曾经;当我们能够再续前缘,又为何认定来世并非今生.</description>
+        <link>http://blog.csdn.net/aigestudio/rss/list</link>
+    </item>
+    <item class="rss">
+        <title>阿拉神农</title>
+        <description>深入理解Android与其他技术，管理，人生百态，团队建设等</description>
+        <link>http://blog.csdn.net/innost/rss/list</link>
+    </item>
+</blog-list>

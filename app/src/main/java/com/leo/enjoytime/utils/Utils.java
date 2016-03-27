@@ -1,8 +1,14 @@
 package com.leo.enjoytime.utils;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.TypedValue;
+
+import com.leo.enjoytime.activity.WebViewActivity;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -57,6 +63,25 @@ public class Utils {
         }
 
         return inSampleSize;
+    }
+
+    /**
+     * Converts a dp value to pixels.
+     * @param dp
+     * @return Pixel value of dp.
+     */
+    public static float dpToPix(Context ctx,float dp) {
+        //return SCALE * dp + FLOAT_INT_AVG_NUDGE;
+        //InternalDimension id = new InternalDimension(dp, TypedValue.COMPLEX_UNIT_DIP);
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,  ctx.getResources().getDisplayMetrics());
+
+    }
+
+    public static void gotoWebView(Activity activity,String url) {
+        Intent intent = new Intent();
+        intent.setAction("com.leo.enjoytime.VIEW");
+        intent.putExtra(WebViewActivity.URL_PARAM, url);
+        activity.startActivity(intent);
     }
 
 }

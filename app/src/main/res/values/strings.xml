@@ -14,4 +14,7 @@
     <string name="loading">载入网页中...</string>
     <string name="snackbar_new_msg">已更新最新数据</string>
 
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

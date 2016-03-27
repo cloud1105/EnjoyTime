@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import com.leo.enjoytime.activity.MainActivity;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.fragment.GanChaiItemFragment;
+import com.leo.enjoytime.fragment.TabBlogFragment;
 
 /**
  * Created by leo on 16/3/19.
@@ -25,7 +26,7 @@ public class GanChaiFragmentPagerAdapter extends FragmentStatePagerAdapter {
             case ANDROID_TYPE:
                 return GanChaiItemFragment.newInstance(ANDROID_TYPE);
             case BLOG_TYPE:
-
+                return new TabBlogFragment();
             default:
                 return GanChaiItemFragment.newInstance(ANDROID_TYPE);
         }

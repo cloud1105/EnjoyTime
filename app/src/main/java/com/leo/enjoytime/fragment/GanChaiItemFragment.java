@@ -1,7 +1,6 @@
 package com.leo.enjoytime.fragment;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
@@ -21,11 +20,11 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
-import com.leo.enjoytime.activity.WebViewActivity;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.model.Entry;
 import com.leo.enjoytime.network.VolleyUtils;
+import com.leo.enjoytime.utils.Utils;
 import com.leo.enjoytime.view.SwipyRefreshLayout;
 import com.leo.enjoytime.view.SwipyRefreshLayoutDirection;
 import com.like.LikeButton;
@@ -176,7 +175,7 @@ public class GanChaiItemFragment extends BaseFragment {
                 } else if (direction == SwipyRefreshLayoutDirection.BOTTOM) {
                     if (isLoadMore) {
                         loadNewData(false);
-                    }else{
+                    } else {
                         Snackbar.make(rootView, "没有更多数据了", Snackbar.LENGTH_SHORT).show();
                     }
                 }
@@ -205,7 +204,7 @@ public class GanChaiItemFragment extends BaseFragment {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        gotoWebView(entry.getUrl());
+                        Utils.gotoWebView(getActivity(),entry.getUrl());
                     }
                 });
             }
@@ -230,12 +229,6 @@ public class GanChaiItemFragment extends BaseFragment {
         recyclerView.setHasFixedSize(true);
     }
 
-    private void gotoWebView(String url) {
-        Intent intent = new Intent();
-        intent.setAction("com.leo.enjoytime.VIEW");
-        intent.putExtra(WebViewActivity.URL_PARAM, url);
-        startActivity(intent);
-    }
 
     @Override
     public void onPause() {

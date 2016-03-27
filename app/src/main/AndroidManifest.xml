@@ -5,9 +5,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <!--bugsnag Optional: To provide network connectivity information to Bugsnag -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-
+    <!-- bugsnag Optional: To provide network connectivity information to Bugsnag -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".App"
@@ -18,7 +17,8 @@
         android:theme="@style/AppTheme">
         <meta-data
             android:name="com.bugsnag.android.API_KEY"
-            android:value="3f6118070be25e31309aa6317dfb09cc"/>
+            android:value="3f6118070be25e31309aa6317dfb09cc" />
+
         <activity
             android:name=".activity.MainActivity"
             android:label="@string/app_name"
@@ -31,11 +31,7 @@
         </activity>
         <activity
             android:name=".activity.WebViewActivity"
-            android:parentActivityName=".activity.MainActivity"
             android:theme="@style/AppTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.MainActivity" />
 
             <intent-filter>
                 <action android:name="com.leo.enjoytime.VIEW" />
@@ -50,6 +46,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activity.MainActivity" />
         </activity>
+        <activity android:name=".activity.RssReaderActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".activity.AtomActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>
