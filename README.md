@@ -19,6 +19,9 @@ http://fir.im/enjoytime<br>
  
  V0.2<br>
  增加干柴数据<br>
+ 
+ V0.3<br>
+ 增加知名技术博客<br>
 
 其他说明<br>
 应用中获取数据的API由gank.io网站提供。<br>
