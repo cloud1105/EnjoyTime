@@ -2,6 +2,9 @@ package com.leo.enjoytime.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -40,6 +43,28 @@ public class RssReaderActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private RecyclerView recyclerView;
     private RssReaderAdapter adapter;
+    private static final int CONVERT_XML_TO_ENTRY = 1;
+    @SuppressWarnings("handlerleak")
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case CONVERT_XML_TO_ENTRY:
+                    List<Entry> list = msg.getData().getParcelableArrayList("list");
+                    if (list != null && list.size() != 0) {
+                        if (adapter == null) {
+                            adapter = new RssReaderAdapter();
+                        }
+                        adapter.setList(list);
+                    }
+
+                    setProgressBarIndeterminateVisibility(false);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +72,10 @@ public class RssReaderActivity extends AppCompatActivity {
         setContentView(R.layout.activity_rss_reader);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,51 +101,17 @@ public class RssReaderActivity extends AppCompatActivity {
 
         listener = new Response.Listener<XmlPullParser>() {
             @Override
-            public void onResponse(XmlPullParser response) {
-                List<Entry> list = new ArrayList<>();
-                Entry entry = null;
-                try {
-                    int eventType = response.getEventType();
-                    while(XmlPullParser.END_DOCUMENT != eventType){
-                        switch (eventType){
-                            case XmlPullParser.START_TAG:
-                                String tag = response.getName();
-                                if ("item".equalsIgnoreCase(tag)){
-                                    entry = new Entry();
-
-                                }else if (entry != null){
-                                    if ("title".equalsIgnoreCase(tag)){
-                                        entry.setTitle(new String(response.nextText().getBytes(),"UTF-8"));
-                                    }else if ("description".equalsIgnoreCase(tag)){
-                                        entry.setDesc(new String(response.nextText().getBytes(),"UTF-8"));
-                                    }else if ("link".equalsIgnoreCase(tag)){
-                                        entry.setUrl(response.nextText());
-                                    }
-                                }
-                                break;
-                            case XmlPullParser.END_TAG:
-                                if (response.getName().equalsIgnoreCase("item") && entry != null) {
-                                    list.add(entry);
-                                    entry = null;
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                        eventType = response.next();
+            public void onResponse(final XmlPullParser response) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ArrayList<Entry> entryList = parseRssXml(response);
+                        Message msg = Message.obtain();
+                        msg.what = CONVERT_XML_TO_ENTRY;
+                        msg.getData().putParcelableArrayList("list",entryList);
+                        mHandler.sendMessage(msg);
                     }
-                }catch (XmlPullParserException e) {
-                    Log.e(TAG,"xml parse error :"+e.getLocalizedMessage());
-                } catch (IOException e) {
-                    Log.e(TAG,"xml parse error IOException:"+e.getLocalizedMessage());
-                }
-                if (list.size() != 0){
-                    if (adapter == null){
-                        adapter = new RssReaderAdapter();
-                    }
-                    adapter.setList(list);
-                }
-                setProgressBarIndeterminateVisibility(false);
+                }).start();
             }
         };
         errorListener = new Response.ErrorListener() {
@@ -129,6 +122,48 @@ public class RssReaderActivity extends AppCompatActivity {
             }
         };
         VolleyUtils.queryRssPage(TAG, rssUrl, listener, errorListener);
+    }
+
+    @NonNull
+    private ArrayList<Entry> parseRssXml(XmlPullParser response) {
+        ArrayList<Entry> list = new ArrayList<>();
+        Entry entry = null;
+        try {
+            int eventType = response.getEventType();
+            while(XmlPullParser.END_DOCUMENT != eventType){
+                switch (eventType){
+                    case XmlPullParser.START_TAG:
+                        String tag = response.getName();
+                        if ("item".equalsIgnoreCase(tag)){
+                            entry = new Entry();
+
+                        }else if (entry != null){
+                            if ("title".equalsIgnoreCase(tag)){
+                                entry.setTitle(new String(response.nextText().getBytes(),"UTF-8"));
+                            }else if ("description".equalsIgnoreCase(tag)){
+                                entry.setDesc(new String(response.nextText().getBytes(),"UTF-8"));
+                            }else if ("link".equalsIgnoreCase(tag)){
+                                entry.setUrl(response.nextText());
+                            }
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if (response.getName().equalsIgnoreCase("item") && entry != null) {
+                            list.add(entry);
+                            entry = null;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                eventType = response.next();
+            }
+        }catch (XmlPullParserException e) {
+            Log.e(TAG, "xml parse error :" + e.getLocalizedMessage());
+        } catch (IOException e) {
+            Log.e(TAG,"xml parse error IOException:"+e.getLocalizedMessage());
+        }
+        return list;
     }
 
     @Override

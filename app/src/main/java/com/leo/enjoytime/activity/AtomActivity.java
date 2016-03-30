@@ -2,6 +2,9 @@ package com.leo.enjoytime.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -40,6 +43,29 @@ public class AtomActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private RecyclerView recyclerView;
     private RssReaderAdapter adapter;
+    private static final int CONVERT_XML_TO_ENTRY = 1;
+
+    @SuppressWarnings("handlerleak")
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case CONVERT_XML_TO_ENTRY:
+                    List<Entry> list = msg.getData().getParcelableArrayList("list");
+                    if (list != null && list.size() != 0) {
+                        if (adapter == null) {
+                            adapter = new RssReaderAdapter();
+                        }
+                        adapter.setList(list);
+                    }
+
+                    setProgressBarIndeterminateVisibility(false);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +73,10 @@ public class AtomActivity extends AppCompatActivity {
         setContentView(R.layout.activity_rss_reader);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -56,7 +84,7 @@ public class AtomActivity extends AppCompatActivity {
             }
         });
         recyclerView = (RecyclerView) findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
         adapter = new RssReaderAdapter();
@@ -74,52 +102,19 @@ public class AtomActivity extends AppCompatActivity {
 
         listener = new Response.Listener<XmlPullParser>() {
             @Override
-            public void onResponse(XmlPullParser response) {
-                List<Entry> list = new ArrayList<>();
-                Entry entry = null;
-                try {
-                    int eventType = response.getEventType();
-                    while(XmlPullParser.END_DOCUMENT != eventType){
-                        switch (eventType){
-                            case XmlPullParser.START_TAG:
-                                String tag = response.getName();
-                                if ("entry".equalsIgnoreCase(tag)){
-                                    entry = new Entry();
-
-                                }else if (entry != null){
-                                    if ("title".equalsIgnoreCase(tag)){
-                                        entry.setTitle(new String(response.nextText().getBytes(),"UTF-8"));
-                                    }else if ("content".equalsIgnoreCase(tag)){
-                                        entry.setDesc(new String(response.nextText().getBytes(),"UTF-8"));
-                                    }else if ("link".equalsIgnoreCase(tag)){
-                                        entry.setUrl(response.getAttributeValue(null, "href"));
-                                    }
-                                }
-                                break;
-                            case XmlPullParser.END_TAG:
-                                if (response.getName().equalsIgnoreCase("entry") && entry != null) {
-                                    list.add(entry);
-                                    entry = null;
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                        eventType = response.next();
+            public void onResponse(final XmlPullParser response) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ArrayList<Entry> entryList = parseAtomXml(response);
+                        Message msg = Message.obtain();
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelableArrayList("list",entryList);
+                        msg.setData(bundle);
+                        msg.what = CONVERT_XML_TO_ENTRY;
+                        mHandler.sendMessage(msg);
                     }
-                }catch (XmlPullParserException e) {
-                    Log.e(TAG,"xml parse error :"+e.getLocalizedMessage());
-                } catch (IOException e) {
-                    Log.e(TAG,"xml parse error IOException:"+e.getLocalizedMessage());
-                }
-                if (list.size() != 0){
-                    if (adapter == null){
-                        adapter = new RssReaderAdapter();
-                    }
-                    adapter.setList(list);
-                }
-
-                setProgressBarIndeterminateVisibility(false);
+                }).start();
             }
         };
         errorListener = new Response.ErrorListener() {
@@ -130,6 +125,49 @@ public class AtomActivity extends AppCompatActivity {
             }
         };
         VolleyUtils.queryRssPage(TAG, rssUrl, listener, errorListener);
+
+    }
+
+    @NonNull
+    private ArrayList<Entry> parseAtomXml(XmlPullParser response) {
+        ArrayList<Entry> list = new ArrayList<>();
+        Entry entry = null;
+        try {
+            int eventType = response.getEventType();
+            while (XmlPullParser.END_DOCUMENT != eventType) {
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        String tag = response.getName();
+                        if ("entry".equalsIgnoreCase(tag)) {
+                            entry = new Entry();
+
+                        } else if (entry != null) {
+                            if ("title".equalsIgnoreCase(tag)) {
+                                entry.setTitle(new String(response.nextText().getBytes(), "UTF-8"));
+                            } else if ("content".equalsIgnoreCase(tag)) {
+                                entry.setDesc(new String(response.nextText().getBytes(), "UTF-8"));
+                            } else if ("link".equalsIgnoreCase(tag)) {
+                                entry.setUrl(response.getAttributeValue(null, "href"));
+                            }
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if (response.getName().equalsIgnoreCase("entry") && entry != null) {
+                            list.add(entry);
+                            entry = null;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                eventType = response.next();
+            }
+        } catch (XmlPullParserException e) {
+            Log.e(TAG, "xml parse error :" + e.getLocalizedMessage());
+        } catch (IOException e) {
+            Log.e(TAG, "xml parse error IOException:" + e.getLocalizedMessage());
+        }
+        return list;
     }
 
     @Override
@@ -138,7 +176,17 @@ public class AtomActivity extends AppCompatActivity {
         VolleyUtils.cancelQuery(TAG);
     }
 
-    class RssReaderAdapter extends RecyclerView.Adapter<RssReaderAdapter.ViewHolder>{
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
+
+    class RssReaderAdapter extends RecyclerView.Adapter<RssReaderAdapter.ViewHolder> {
 
         private List<Entry> list;
 
@@ -149,7 +197,7 @@ public class AtomActivity extends AppCompatActivity {
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View rootView = LayoutInflater.from(AtomActivity.this).inflate(R.layout.blog_item,parent,false);
+            View rootView = LayoutInflater.from(AtomActivity.this).inflate(R.layout.blog_item, parent, false);
             return new ViewHolder(rootView);
         }
 
@@ -162,12 +210,12 @@ public class AtomActivity extends AppCompatActivity {
         public int getItemCount() {
             if (list != null && list.size() != 0) {
                 return list.size();
-            }else{
+            } else {
                 return 0;
             }
         }
 
-        class ViewHolder extends RecyclerView.ViewHolder{
+        class ViewHolder extends RecyclerView.ViewHolder {
             private TextView txvTitle;
             private TextView txvDesc;
 
@@ -177,8 +225,8 @@ public class AtomActivity extends AppCompatActivity {
                 txvDesc = (TextView) itemView.findViewById(R.id.txv_desc);
             }
 
-            public void bindData(final Entry entry){
-                if (entry == null){
+            public void bindData(final Entry entry) {
+                if (entry == null) {
                     return;
                 }
                 txvTitle.setText(entry.getTitle());
@@ -186,11 +234,12 @@ public class AtomActivity extends AppCompatActivity {
                 itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Utils.gotoWebView(AtomActivity.this,entry.getUrl());
+                        Utils.gotoWebView(AtomActivity.this, entry.getUrl());
                     }
                 });
             }
 
         }
     }
+
 }
