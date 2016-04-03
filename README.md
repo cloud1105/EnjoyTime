@@ -23,6 +23,9 @@ http://fir.im/enjoytime<br>
  V0.3<br>
  增加知名技术博客<br>
 
+ V0.4<br>
+ 增加我最喜欢的文章<br>
+
 其他说明<br>
 应用中获取数据的API由gank.io网站提供。<br>
 应用中使用的图片等资源来自互联网。<br>
