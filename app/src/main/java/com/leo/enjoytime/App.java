@@ -2,12 +2,9 @@ package com.leo.enjoytime;
 
 import android.app.Application;
 import android.content.Context;
-
 import com.bugsnag.android.Bugsnag;
-import com.github.moduth.blockcanary.BlockCanary;
 import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.network.VolleyUtils;
-import com.leo.enjoytime.utils.AppBlockCanaryContext;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
 
@@ -29,7 +26,6 @@ public class App extends Application {
         manager = new DBManager(getApplicationContext());
         VolleyUtils.init(getApplicationContext());
         Bugsnag.init(this);
-        BlockCanary.install(this, new AppBlockCanaryContext()).start();
         refWatcher = LeakCanary.install(this);
     }
 

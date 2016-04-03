@@ -13,8 +13,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.leo.enjoytime.R;
+import com.leo.enjoytime.adapter.FavorAdapter;
 import com.leo.enjoytime.adapter.GanChaiFragmentPagerAdapter;
 import com.leo.enjoytime.adapter.GanhuoFragmentPagerAdapter;
 
@@ -29,6 +31,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int PAGE_GANHUO = 1;
     private static final int PAGE_GANCHAI = 2;
+    private static final int PAGE_MY_FAVORITE = 3;
     private int mCurrentPage;
 
     @Override
@@ -114,6 +117,10 @@ public class MainActivity extends AppCompatActivity
                 mCurrentPage = PAGE_GANCHAI;
             }
         }else if (id == R.id.favor) {
+            if (mCurrentPage != PAGE_MY_FAVORITE){
+                showMyFavor();
+                mCurrentPage = PAGE_MY_FAVORITE;
+            }
 
         } else if (id == R.id.about) {
 
@@ -125,15 +132,28 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private void showMyFavor() {
+        setTitle(R.string.favor);
+        FavorAdapter adapter = new FavorAdapter(getSupportFragmentManager());
+        changePageAdapter(adapter);
+        tabLayout.setVisibility(View.GONE);
+    }
+
     private void showGanChai() {
+        setTitle(R.string.ganchai);
         GanChaiFragmentPagerAdapter adapter = new GanChaiFragmentPagerAdapter(getSupportFragmentManager());
         changePageAdapter(adapter);
+        tabLayout.setVisibility(View.VISIBLE);
+        tabLayout.setupWithViewPager(viewpager);
     }
 
     private void showGanhuo() {
+        setTitle(R.string.ganhuo);
         GanhuoFragmentPagerAdapter adapter =
                 new GanhuoFragmentPagerAdapter(getSupportFragmentManager());
         changePageAdapter(adapter);
+        tabLayout.setVisibility(View.VISIBLE);
+        tabLayout.setupWithViewPager(viewpager);
     }
 
     private void changePageAdapter(FragmentStatePagerAdapter adapter) {
@@ -141,6 +161,5 @@ public class MainActivity extends AppCompatActivity
         viewpager.removeAllViews();
         viewpager.setAdapter(null);
         viewpager.setAdapter(adapter);
-        tabLayout.setupWithViewPager(viewpager);
     }
 }

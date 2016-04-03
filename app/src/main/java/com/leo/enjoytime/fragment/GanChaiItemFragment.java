@@ -3,6 +3,7 @@ package com.leo.enjoytime.fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -133,18 +134,22 @@ public class GanChaiItemFragment extends BaseFragment {
                     try {
                         object = array.getJSONObject(i);
                         Entry entry = new Entry();
-                        entry.setType(Const.DIGEST_TYPE_ANDROID+"");
+                        entry.setType(Const.DIGEST_TYPE_ANDROID + "");
                         entry.setDigest_id(object.getInt("id"));
                         entry.setTitle(object.getString("title"));
                         entry.setSummary(object.getString("summary"));
                         entry.setThumb_nail(object.getString("thumbnail"));
                         entry.setUrl(object.getString("source"));
                         entry.setFavor_flag(Const.UNLIKE);
-                        list.add(entry);
-                        if (dbManager.getDataByUrl(entry.getUrl()) == null) {
+                        Entry entryInDb = dbManager.getDataByUrl(entry.getUrl());
+                        if ( entryInDb == null) {
                             isNew = true;
+                            entry.setFavor_flag(Const.UNLIKE);
                             dbManager.insertData(entry);
+                        }else{
+                            entry.setFavor_flag(entryInDb.getFavor_flag());
                         }
+                        list.add(entry);
                         hasLoadPage = curPage;
                     } catch (JSONException e) {
                         Log.e(TAG, "getJSONObject error.");
@@ -315,19 +320,30 @@ public class GanChaiItemFragment extends BaseFragment {
                     imgThumbnail.setErrorImageResId(R.drawable.default_image);
                     VolleyUtils.setMeizhiImg(imgThumbnail, entry.getThumb_nail());
                 }
+                if (entry.getFavor_flag() == 1) {
+                    likeButton.setLiked(true);
+                }else {
+                    likeButton.setLiked(false);
+                }
                 likeButton.setOnLikeListener(new OnLikeListener() {
                     @Override
                     public void liked(LikeButton likeButton) {
                         entry.setFavor_flag(Const.LIKE);
-                        dbManager.changeArticleToLikeOrUnlike(entry);
-                        notifyDataSetChanged();
+                        mHandler.removeMessages(MSG_UPDATE_ENTRY);
+                        Message message = Message.obtain();
+                        message.what = MSG_UPDATE_ENTRY;
+                        message.getData().putParcelable("entry", entry);
+                        mHandler.sendMessage(message);
                     }
 
                     @Override
                     public void unLiked(LikeButton likeButton) {
                         entry.setFavor_flag(Const.UNLIKE);
-                        dbManager.changeArticleToLikeOrUnlike(entry);
-                        notifyDataSetChanged();
+                        mHandler.removeMessages(MSG_UPDATE_ENTRY);
+                        Message message = Message.obtain();
+                        message.what = MSG_UPDATE_ENTRY;
+                        message.getData().putParcelable("entry", entry);
+                        mHandler.sendMessage(message);
                     }
                 });
             }

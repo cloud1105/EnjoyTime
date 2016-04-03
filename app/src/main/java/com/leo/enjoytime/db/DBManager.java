@@ -165,6 +165,26 @@ public class DBManager {
         return list;
     }
 
+    public List<Entry> getFavorlist(int count,int pageSize) {
+        List<Entry> list = new ArrayList<>();
+        db = dbHelper.getReadableDatabase();
+        //offset代表从第几条记录“之后“开始查询，limit表明查询多少条结果
+        String sql = "SELECT DESC,CREATE_AT,URL FROM " + EnjoyDataHelper.TABLE_NAME_ITEM +" where "+EnjoyDataHelper.ITEM_COLUMN_FAVOR+
+                " = 1 "+"order by "+EnjoyDataHelper.ITEM_COLUMN_CREATE_AT +" desc limit "+ count +" offset "+pageSize*count;
+        Log.d(TAG,"getFavorlist sql:"+sql);
+        Cursor cursor = db.rawQuery(sql,null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                Entry data = cursorToData(cursor);
+                list.add(data);
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        return list;
+    }
+
     private Entry cursorToDigestData(Cursor cursor) {
         Entry entry = new Entry();
         int id = cursor.getInt(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_DIGEST_ID));
@@ -179,15 +199,19 @@ public class DBManager {
 
     private Entry cursorToData(Cursor cursor) {
         Entry entry = new Entry();
-        String type = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_TYPE));
+        if (cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_TYPE) != -1) {
+            String type = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_TYPE));
+            entry.setType(type);
+        }
+        if (cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_FAVOR) != -1) {
+            int favor_flag = cursor.getInt(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_FAVOR));
+            entry.setFavor_flag(favor_flag);
+        }
         String url = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_URL));
         String desc = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_DESC));
-        int favor_flag = cursor.getInt(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_FAVOR));
         String create_at = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_CREATE_AT));
-        entry.setType(type);
         entry.setUrl(url);
         entry.setDesc(desc);
-        entry.setFavor_flag(favor_flag);
         entry.setCreate_at(create_at);
         return entry;
     }

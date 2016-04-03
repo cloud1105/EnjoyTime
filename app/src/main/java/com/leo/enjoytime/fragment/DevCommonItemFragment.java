@@ -3,6 +3,7 @@ package com.leo.enjoytime.fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -117,12 +118,15 @@ public class DevCommonItemFragment extends BaseFragment {
                 entry.setType(object.getString("type"));
                 entry.setDesc(object.getString("desc"));
                 entry.setCreate_at(object.getString("publishedAt"));
-                entry.setFavor_flag(Const.UNLIKE);
-                list.add(entry);
-                if (dbManager.getDataByUrl(entry.getUrl()) == null) {
+                Entry entryInDb = dbManager.getDataByUrl(entry.getUrl());
+                if ( entryInDb == null) {
                     isNew = true;
+                    entry.setFavor_flag(Const.UNLIKE);
                     dbManager.insertData(entry);
+                }else{
+                    entry.setFavor_flag(entryInDb.getFavor_flag());
                 }
+                list.add(entry);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -281,21 +285,6 @@ public class DevCommonItemFragment extends BaseFragment {
             final Entry entry = entryList.get(position);
             itemClickListener.onItemclick(holder.itemView, entry);
             holder.bindData(entry);
-            holder.setLikeButtonListener(new OnLikeListener() {
-                @Override
-                public void liked(LikeButton likeButton) {
-                    entry.setFavor_flag(Const.LIKE);
-                    dbManager.changeArticleToLikeOrUnlike(entry);
-                    notifyItemChanged(position);
-                }
-
-                @Override
-                public void unLiked(LikeButton likeButton) {
-                    entry.setFavor_flag(Const.UNLIKE);
-                    dbManager.changeArticleToLikeOrUnlike(entry);
-                    notifyItemChanged(position);
-                }
-            });
         }
 
         @Override
@@ -308,17 +297,39 @@ public class DevCommonItemFragment extends BaseFragment {
             private TextView date;
             private LikeButton likeButton;
 
-            void bindData(Entry entry) {
+            void bindData(final Entry entry) {
                 String dateStr = entry.getCreate_at();
                 String text = entry.getDesc();
                 Date temp = Utils.formatDateFromStr(dateStr);
                 String formatDate = Utils.getFormatDateStr(temp);
                 date.setText(formatDate);
                 txvDesc.setText(text);
-            }
+                if (entry.getFavor_flag() == 1) {
+                    likeButton.setLiked(true);
+                }else {
+                    likeButton.setLiked(false);
+                }
+                likeButton.setOnLikeListener(new OnLikeListener() {
+                    @Override
+                    public void liked(LikeButton likeButton) {
+                        entry.setFavor_flag(Const.LIKE);
+                        mHandler.removeMessages(MSG_UPDATE_ENTRY);
+                        Message message = Message.obtain();
+                        message.what = MSG_UPDATE_ENTRY;
+                        message.getData().putParcelable("entry",entry);
+                        mHandler.sendMessage(message);
+                    }
 
-            public void setLikeButtonListener(OnLikeListener likeListener) {
-                likeButton.setOnLikeListener(likeListener);
+                    @Override
+                    public void unLiked(LikeButton likeButton) {
+                        entry.setFavor_flag(Const.UNLIKE);
+                        mHandler.removeMessages(MSG_UPDATE_ENTRY);
+                        Message message = Message.obtain();
+                        message.what = MSG_UPDATE_ENTRY;
+                        message.getData().putParcelable("entry",entry);
+                        mHandler.sendMessage(message);
+                    }
+                });
             }
 
             public ViewHolder(View itemView) {
