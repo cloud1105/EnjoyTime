@@ -32,4 +32,8 @@ dependencies {
     compile 'com.mcxiaoke.volley:library:1.0.19'
     compile 'com.commit451:PhotoView:1.2.4'
     compile 'com.bugsnag:bugsnag-android:+'
+    compile 'io.reactivex:rxandroid:1.1.0'
+// Because RxAndroid releases are few and far between, it is recommended you also
+// explicitly depend on RxJava's latest version for bug fixes and new features.
+    compile 'io.reactivex:rxjava:1.1.0'
 }
