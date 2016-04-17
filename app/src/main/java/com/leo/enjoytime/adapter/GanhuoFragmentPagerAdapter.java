@@ -10,6 +10,9 @@ import com.leo.enjoytime.fragment.DevCommonItemFragment;
 import com.leo.enjoytime.fragment.MeiZhiItemFragment;
 
 /**
+ * ganhuo page
+ * items:
+ *  android,ios,meizhi
  * Created by leo on 16/3/19.
  */
 public class GanhuoFragmentPagerAdapter extends FragmentStatePagerAdapter {
@@ -17,9 +20,11 @@ public class GanhuoFragmentPagerAdapter extends FragmentStatePagerAdapter {
     public GanhuoFragmentPagerAdapter(FragmentManager fm) {
         super(fm);
     }
+
     public static final int ANDROID_TYPE = 0;
     public static final int IOS_TYPE = 1;
     public static final int MEIZHI_TYPE = 2;
+
     @Override
     public Fragment getItem(int position) {
         switch (position) {

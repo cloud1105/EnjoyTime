@@ -43,7 +43,7 @@ public class FavoriteFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        manager = App.getDbmanager();
+        manager = App.getDbManager();
     }
 
     @Override

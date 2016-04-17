@@ -4,57 +4,52 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.model.Entry;
-import com.leo.enjoytime.network.VolleyUtils;
+import com.leo.enjoytime.network.AbstractNewWorkerManager;
+import com.leo.enjoytime.network.NetWorkCallback;
+import com.leo.enjoytime.utils.LogUtils;
 import com.leo.enjoytime.utils.Utils;
 import com.leo.enjoytime.view.SwipyRefreshLayout;
 import com.leo.enjoytime.view.SwipyRefreshLayoutDirection;
 import com.like.LikeButton;
 import com.like.OnLikeListener;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
-public class DevCommonItemFragment extends BaseFragment {
+/**
+ * android and ios's Fragment
+ * Created by leo on 16/3/19.
+ */
+public class DevCommonItemFragment extends BaseFragment implements NetWorkCallback {
     private static final String TAG = DevCommonItemFragment.class.getSimpleName();
     private static final String TYPE = "type";
     private String articleType;
     private SwipyRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
     private DBManager dbManager;
+    private AbstractNewWorkerManager newWorkerManager;
     private GanhuoRcyAdapter adapter;
-    private Response.Listener responseListener;
-    private Response.ErrorListener errorListener;
     private int hasLoadPage = 0;
     private boolean isLoadMore = true;
-    private boolean isNew = false;
+
 
     public DevCommonItemFragment() {
-        // Required empty public constructor
     }
 
     /**
@@ -77,111 +72,16 @@ public class DevCommonItemFragment extends BaseFragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             articleType = getArguments().getString(TYPE);
+        }else{
+            throw new IllegalArgumentException("no arguments find in DevCommonItemFragment");
         }
-        responseListener = new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                List<Entry> list = parseEntryList(response);
-                if (list == null) return;
-                adapter.addItems(list);
-                if (list.size() == Const.LIMIT_COUNT) {
-                    isLoadMore = true;
-                } else {
-                    isLoadMore = false;
-                }
-                swipeRefreshLayout.setRefreshing(false);
-
-            }
-        };
-        errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                swipeRefreshLayout.setRefreshing(false);
-                Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "send volley request error, msg :" + error.getLocalizedMessage());
-            }
-        };
-    }
-
-    @Nullable
-    private List<Entry> parseEntryList(JSONObject response) {
-        JSONArray array = new JSONArray();
-        array = parseJsonArrayFromUrlResponse(response, array);
-        if (array == null || array.length() == 0) return null;
-        List<Entry> list = new ArrayList<>();
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject object;
-            try {
-                object = array.getJSONObject(i);
-                Entry entry = new Entry();
-                entry.setUrl(object.getString("url"));
-                entry.setType(object.getString("type"));
-                entry.setDesc(object.getString("desc"));
-                entry.setCreate_at(object.getString("publishedAt"));
-                Entry entryInDb = dbManager.getDataByUrl(entry.getUrl());
-                if ( entryInDb == null) {
-                    isNew = true;
-                    entry.setFavor_flag(Const.UNLIKE);
-                    dbManager.insertData(entry);
-                }else{
-                    entry.setFavor_flag(entryInDb.getFavor_flag());
-                }
-                list.add(entry);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-        }
-        return list;
-    }
-
-    @Nullable
-    private JSONArray parseJsonArrayFromUrlResponse(JSONObject response, JSONArray array) {
-        try {
-            String result = response.getString("error");
-            if ("false".equals(result)) {
-                array = response.getJSONArray("results");
-            } else {
-                Toast.makeText(getContext(), "没有更多数据了", Toast.LENGTH_SHORT).show();
-                swipeRefreshLayout.setRefreshing(false);
-                Log.e(TAG, "no more data");
-            }
-        } catch (JSONException e) {
-            Log.e(TAG, "parse JSONObject error :" + e.getLocalizedMessage());
-        }
-        if (array.length() == 0) {
-            Toast.makeText(getContext(), "没有数据", Toast.LENGTH_SHORT).show();
-            swipeRefreshLayout.setRefreshing(false);
-            Log.e(TAG, "no data");
-            return null;
-        }
-        return array;
+        newWorkerManager = App.getNetWorkManager();
     }
 
 
     @Override
-    public void onPause() {
-        super.onPause();
-        VolleyUtils.cancelQuery(TAG);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        dbManager = App.getDbmanager();
-        Context context = getContext();
-        adapter = new GanhuoRcyAdapter(context);
-        adapter.setItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemclick(View view, final Entry entry) {
-                view.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Utils.gotoWebView(getActivity(),entry.getUrl());
-                    }
-                });
-            }
-        });
+    public void onResume() {
+        super.onResume();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -195,10 +95,34 @@ public class DevCommonItemFragment extends BaseFragment {
                 }
             }
         }, 200);
+    }
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        newWorkerManager.cancelQuery(TAG);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        dbManager = App.getDbManager();
+        Context context = getContext();
+        adapter = new GanhuoRcyAdapter(context);
+        adapter.setItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemclick(View view, final Entry entry) {
+                view.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Utils.gotoWebView(getActivity(),entry.getUrl());
+                    }
+                });
+            }
+        });
         recyclerView.setAdapter(adapter);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-//        recyclerView.addItemDecoration(new DividerItemDecoration(context,
-//                DividerItemDecoration.VERTICAL_LIST));
         recyclerView.setHasFixedSize(true);
     }
 
@@ -210,8 +134,7 @@ public class DevCommonItemFragment extends BaseFragment {
         } else {
             hasLoadPage++;
         }
-        VolleyUtils.queryGanhuo(TAG, articleType, hasLoadPage, Const.LIMIT_COUNT,
-                responseListener, errorListener);
+        newWorkerManager.queryGanhuo(TAG, articleType, hasLoadPage, Const.LIMIT_COUNT,this);
     }
 
 
@@ -235,16 +158,44 @@ public class DevCommonItemFragment extends BaseFragment {
                 }
             }
         });
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.recycle);
+        recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+        // TODO: WiFi网络或数据网络打开时加载最新网络数据  16/4/12
         swipeRefreshLayout.post(new Runnable() {
             @Override
             public void run() {
                 swipeRefreshLayout.setRefreshing(true);
             }
         });
-        recyclerView = (RecyclerView) rootView.findViewById(R.id.recycle);
-        recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
         return rootView;
 
+    }
+
+    @Override
+    public void onSuccess(List<Entry> list) {
+        if (list == null || list.size() == 0) {
+            swipeRefreshLayout.setRefreshing(false);
+            return;
+        }
+        adapter.addItems(list);
+        if (list.size() == Const.LIMIT_COUNT) {
+            isLoadMore = true;
+        } else {
+            isLoadMore = false;
+        }
+        if (newWorkerManager.isNew || 1 == hasLoadPage){
+            Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
+        }
+        if (swipeRefreshLayout.isRefreshing()){
+            swipeRefreshLayout.setRefreshing(false);
+        }
+    }
+
+    @Override
+    public void onError(Exception e) {
+        swipeRefreshLayout.setRefreshing(false);
+        Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
+        LogUtils.loggerE(TAG, "request error, msg :" + e.getLocalizedMessage());
     }
 
     public interface OnItemClickListener {

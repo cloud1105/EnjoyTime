@@ -17,3 +17,5 @@
 #}
 -dontwarn com.github.moduth.blockcanary.ui.*
 -keep class com.github.moduth.blockcanary.ui.*
+-dontwarn com.tencent.bugly.**
+-keep public class com.tencent.bugly.**{*;}

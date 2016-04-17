@@ -23,7 +23,7 @@ public abstract class BaseFragment extends Fragment {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                        App.getDbmanager().changeArticleToLikeOrUnlike(entry);
+                        App.getDbManager().changeArticleToLikeOrUnlike(entry);
                         }
                     }).start();
                     break;

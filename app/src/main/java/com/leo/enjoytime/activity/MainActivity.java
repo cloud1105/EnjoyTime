@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.leo.enjoytime.BuildConfig;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.adapter.FavorAdapter;
 import com.leo.enjoytime.adapter.GanChaiFragmentPagerAdapter;
@@ -26,28 +27,37 @@ public class MainActivity extends AppCompatActivity
     private ViewPager viewpager;
     private TabLayout tabLayout;
 
+    /** page counts **/
     public static final int GANHUO_COUNT = 3;
     public static final int GANCHAI_COUNT = 2;
 
+    /** page number **/
     private static final int PAGE_GANHUO = 1;
     private static final int PAGE_GANCHAI = 2;
     private static final int PAGE_MY_FAVORITE = 3;
+
+    /** current page **/
     private int mCurrentPage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+        if (BuildConfig.DEBUG) {
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .penaltyLog()
+                    .penaltyDeath()
+                    .build());
+
+        }
 
         setContentView(R.layout.activity_main);
 
+        /** toolbar as actionbar**/
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        /** connect drawer with toolbar **/
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -63,7 +73,8 @@ public class MainActivity extends AppCompatActivity
 
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         viewpager = (ViewPager) findViewById(R.id.pager);
-        //show by default
+
+        /** showGanhuo by default **/
         showGanhuo();
         mCurrentPage = PAGE_GANHUO;
     }

@@ -4,123 +4,52 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.NetworkImageView;
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.activity.ImageViewActivity;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.model.Entry;
-import com.leo.enjoytime.network.VolleyUtils;
+import com.leo.enjoytime.network.AbstractNewWorkerManager;
+import com.leo.enjoytime.network.NetWorkCallback;
+import com.leo.enjoytime.utils.LogUtils;
 import com.leo.enjoytime.view.SpacesItemDecoration;
 import com.leo.enjoytime.view.SwipyRefreshLayout;
 import com.leo.enjoytime.view.SwipyRefreshLayoutDirection;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class MeiZhiItemFragment extends BaseFragment {
+public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
     private static final String TAG = MeiZhiItemFragment.class.getSimpleName();
     private SwipyRefreshLayout refreshLayout;
     private RecyclerView recyclerView;
     private int hasLoadPage = 0;
     private boolean isLoadMore = true;
-    private boolean isNew = false;
     private DBManager dbManager;
+    private AbstractNewWorkerManager newWorkerManager;
     private MeizhiAdapter meizhiAdapter;
-    private Response.Listener responseListener;
-    private Response.ErrorListener errorListener;
 
     public MeiZhiItemFragment() {
         // Required empty public constructor
     }
 
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        responseListener = new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                JSONArray array = new JSONArray();
-                try {
-                    String result = response.getString("error");
-                    if ("false".equals(result)) {
-                        array = response.getJSONArray("results");
-                    } else {
-                        Toast.makeText(getContext(), "没有更多数据了", Toast.LENGTH_SHORT).show();
-                        refreshLayout.setRefreshing(false);
-                        Log.e(TAG, "no more data");
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "parse JSONObject error :" + e.getLocalizedMessage());
-                }
-                if (array.length() == 0) {
-                    Toast.makeText(getContext(), "没有数据", Toast.LENGTH_SHORT).show();
-                    refreshLayout.setRefreshing(false);
-                    Log.e(TAG, "no data");
-                    return;
-                }
-                List<Entry> list = new ArrayList<>();
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject object;
-                    try {
-                        object = array.getJSONObject(i);
-                        Entry entry = new Entry();
-                        entry.setUrl(object.getString("url"));
-                        entry.setType(object.getString("type"));
-                        entry.setDesc(object.getString("desc"));
-                        entry.setCreate_at(object.getString("publishedAt"));
-                        entry.setFavor_flag(Const.UNLIKE);
-                        list.add(entry);
-                        if (dbManager.getDataByUrl(entry.getUrl()) == null) {
-                            isNew = true;
-                            dbManager.insertData(entry);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-                meizhiAdapter.addItems(list);
-                if (list.size() == Const.LIMIT_COUNT) {
-                    isLoadMore = true;
-                } else {
-                    isLoadMore = false;
-                }
-                if (isNew){
-                    Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
-                }
-                refreshLayout.setRefreshing(false);
-
-            }
-        };
-        errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                refreshLayout.setRefreshing(false);
-                Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "send volley request error, msg :" + error.getLocalizedMessage());
-            }
-        };
+        newWorkerManager = App.getNetWorkManager();
     }
 
     @Override
@@ -157,7 +86,7 @@ public class MeiZhiItemFragment extends BaseFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        dbManager = App.getDbmanager();
+        dbManager = App.getDbManager();
         Context context = getContext();
         meizhiAdapter = new MeizhiAdapter(context);
         recyclerView.setAdapter(meizhiAdapter);
@@ -207,6 +136,12 @@ public class MeiZhiItemFragment extends BaseFragment {
         }, 200);
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        newWorkerManager.cancelQuery(TAG);
+    }
+
     @SuppressWarnings("unchecked")
     private void gotoBigMeizhi(String url) {
         Intent intent = new Intent(getActivity(), ImageViewActivity.class);
@@ -227,8 +162,28 @@ public class MeiZhiItemFragment extends BaseFragment {
         } else {
             hasLoadPage++;
         }
-        VolleyUtils.queryGanhuo(TAG, Const.REQUEST_TYPE_MEIZHI, hasLoadPage, Const.LIMIT_COUNT,
-                responseListener, errorListener);
+        newWorkerManager.queryGanhuo(TAG, Const.REQUEST_TYPE_MEIZHI, hasLoadPage, Const.LIMIT_COUNT,this);
+    }
+
+    @Override
+    public void onSuccess(List<Entry> list) {
+        meizhiAdapter.addItems(list);
+        if (list.size() == Const.LIMIT_COUNT) {
+            isLoadMore = true;
+        } else {
+            isLoadMore = false;
+        }
+        if (newWorkerManager.isNew && 1 == hasLoadPage){
+            Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
+        }
+        refreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onError(Exception e) {
+        refreshLayout.setRefreshing(false);
+        Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
+        LogUtils.loggerE(TAG, "send volley request error, msg :" + e.getLocalizedMessage());
     }
 
     private class MeizhiAdapter extends RecyclerView.Adapter<MeizhiAdapter.VH> {
@@ -280,17 +235,15 @@ public class MeiZhiItemFragment extends BaseFragment {
         }
 
         class VH extends RecyclerView.ViewHolder {
-            private NetworkImageView imageView;
+            private ImageView imageView;
 
             public VH(View itemView) {
                 super(itemView);
-                imageView = (NetworkImageView) itemView.findViewById(R.id.img_meizhi);
+                imageView = (ImageView) itemView.findViewById(R.id.img_meizhi);
             }
 
             void bindData(Entry entry) {
-                imageView.setDefaultImageResId(R.drawable.default_image);
-                imageView.setErrorImageResId(R.drawable.default_image);
-                VolleyUtils.setMeizhiImg(imageView, entry.getUrl());
+                newWorkerManager.setMeizhiImg(imageView, entry.getUrl(),MeiZhiItemFragment.this);
             }
         }
     }

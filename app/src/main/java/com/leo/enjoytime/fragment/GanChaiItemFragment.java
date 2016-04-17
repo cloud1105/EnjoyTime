@@ -13,27 +13,23 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.NetworkImageView;
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.model.Entry;
-import com.leo.enjoytime.network.VolleyUtils;
+import com.leo.enjoytime.network.AbstractNewWorkerManager;
+import com.leo.enjoytime.network.NetWorkCallback;
 import com.leo.enjoytime.utils.Utils;
 import com.leo.enjoytime.view.SwipyRefreshLayout;
 import com.leo.enjoytime.view.SwipyRefreshLayoutDirection;
 import com.like.LikeButton;
 import com.like.OnLikeListener;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +41,7 @@ import java.util.List;
  * Use the {@link GanChaiItemFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class GanChaiItemFragment extends BaseFragment {
+public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback{
     private static final String TYPE_PARAM = "type";
     private static final String TAG = GanChaiItemFragment.class.getSimpleName();
     private int mType;
@@ -58,7 +54,7 @@ public class GanChaiItemFragment extends BaseFragment {
     private Response.ErrorListener errorListener;
     private int hasLoadPage = 0;
     private boolean isLoadMore = true;
-    private boolean isNew = false;
+    private AbstractNewWorkerManager newWorkerManager;
 
     public GanChaiItemFragment() {
         // Required empty public constructor
@@ -86,85 +82,9 @@ public class GanChaiItemFragment extends BaseFragment {
         if (getArguments() != null) {
             mType = getArguments().getInt(TYPE_PARAM,1);
         }
-        responseListener = new Response.Listener<JSONObject>(){
-            @Override
-            public void onResponse(JSONObject response) {
-                List<Entry> list = parseEntryList(response);
-                if (list == null) return;
-                adapter.addItems(list);
-                if(list.size() == Const.LIMIT_COUNT) {
-                    isLoadMore = true;
-                }else{
-                    isLoadMore = false;
-                }
-                swipeRefreshLayout.setRefreshing(false);
-
-            }
-        };
-        errorListener = new Response.ErrorListener(){
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                swipeRefreshLayout.setRefreshing(false);
-                Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "send volley request error, msg :" + error.getLocalizedMessage());
-            }
-        };
+        newWorkerManager = App.getNetWorkManager();
     }
 
-    private List<Entry> parseEntryList(JSONObject response) {
-        JSONArray array;
-        List<Entry> list = new ArrayList<>();
-        try {
-            String result = response.getString("message");
-            if ("Success".equals(result)) {
-                JSONObject dataObject = response.getJSONObject("data");
-                int curPage = Integer.parseInt(dataObject.getString("currentPage"));
-                int allPage = Integer.parseInt(dataObject.getString("allPages"));
-                //over the allpages
-                if (curPage>allPage){
-                    Toast.makeText(getContext(), "没有更多数据了", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "no more data");
-                    swipeRefreshLayout.setRefreshing(false);
-                    return null;
-                }
-                array = dataObject.getJSONArray("result");
-                if (array == null || array.length() == 0) return null;
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject object;
-                    try {
-                        object = array.getJSONObject(i);
-                        Entry entry = new Entry();
-                        entry.setType(Const.DIGEST_TYPE_ANDROID + "");
-                        entry.setDigest_id(object.getInt("id"));
-                        entry.setTitle(object.getString("title"));
-                        entry.setSummary(object.getString("summary"));
-                        entry.setThumb_nail(object.getString("thumbnail"));
-                        entry.setUrl(object.getString("source"));
-                        entry.setFavor_flag(Const.UNLIKE);
-                        Entry entryInDb = dbManager.getDataByUrl(entry.getUrl());
-                        if ( entryInDb == null) {
-                            isNew = true;
-                            entry.setFavor_flag(Const.UNLIKE);
-                            dbManager.insertData(entry);
-                        }else{
-                            entry.setFavor_flag(entryInDb.getFavor_flag());
-                        }
-                        list.add(entry);
-                        hasLoadPage = curPage;
-                    } catch (JSONException e) {
-                        Log.e(TAG, "getJSONObject error.");
-                    }
-
-                }
-            }else{
-                Log.e(TAG, "get error from server.");
-            }
-        }catch (JSONException e){
-            Log.e(TAG, "parse JSONObject error :" + e.getLocalizedMessage());
-        }
-
-        return list;
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -200,7 +120,7 @@ public class GanChaiItemFragment extends BaseFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        dbManager = App.getDbmanager();
+        dbManager = App.getDbManager();
         Context context = getContext();
         adapter = new GanChaiRcvAdapter(context);
         adapter.setItemClickListener(new OnItemClickListener() {
@@ -209,7 +129,7 @@ public class GanChaiItemFragment extends BaseFragment {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Utils.gotoWebView(getActivity(),entry.getUrl());
+                        Utils.gotoWebView(getActivity(), entry.getUrl());
                     }
                 });
             }
@@ -234,11 +154,10 @@ public class GanChaiItemFragment extends BaseFragment {
         recyclerView.setHasFixedSize(true);
     }
 
-
     @Override
     public void onPause() {
         super.onPause();
-        VolleyUtils.cancelQuery(TAG);
+        newWorkerManager.cancelQuery(TAG);
     }
 
     private void loadNewData(boolean isNew) {
@@ -248,8 +167,28 @@ public class GanChaiItemFragment extends BaseFragment {
         }else{
             hasLoadPage++;
         }
-        VolleyUtils.queryGanChai(TAG, mType, hasLoadPage, Const.LIMIT_COUNT,
-                responseListener, errorListener);
+        newWorkerManager.queryGanChai(TAG, mType, hasLoadPage, Const.LIMIT_COUNT,this);
+    }
+
+    @Override
+    public void onSuccess(List<Entry> list) {
+        if (list == null || list.size() == 0) {
+            return;
+        }
+        adapter.addItems(list);
+        if(list.size() == Const.LIMIT_COUNT) {
+            isLoadMore = true;
+        }else{
+            isLoadMore = false;
+        }
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onError(Exception e) {
+        swipeRefreshLayout.setRefreshing(false);
+        Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
+        Log.e(TAG, "send volley request error, msg :" + e.getLocalizedMessage());
     }
 
     public interface OnItemClickListener {
@@ -300,13 +239,13 @@ public class GanChaiItemFragment extends BaseFragment {
         public class ViewHolder extends RecyclerView.ViewHolder{
             TextView txvTitle;
             TextView txvSummary;
-            NetworkImageView imgThumbnail;
+            ImageView imgThumbnail;
             LikeButton likeButton;
             public ViewHolder(View itemView) {
                 super(itemView);
                 txvTitle = (TextView) itemView.findViewById(R.id.txv_title);
                 txvSummary = (TextView) itemView.findViewById(R.id.txv_summary);
-                imgThumbnail = (NetworkImageView) itemView.findViewById(R.id.img_thumbnail);
+                imgThumbnail = (ImageView) itemView.findViewById(R.id.img_thumbnail);
                 likeButton = (LikeButton) itemView.findViewById(R.id.like_button);
             }
 
@@ -316,9 +255,7 @@ public class GanChaiItemFragment extends BaseFragment {
                     txvSummary.setText(entry.getSummary());
                 }
                 if (!TextUtils.isEmpty(entry.getThumb_nail())){
-                    imgThumbnail.setDefaultImageResId(R.drawable.default_image);
-                    imgThumbnail.setErrorImageResId(R.drawable.default_image);
-                    VolleyUtils.setMeizhiImg(imgThumbnail, entry.getThumb_nail());
+                    newWorkerManager.setMeizhiImg(imgThumbnail, entry.getThumb_nail(),GanChaiItemFragment.this);
                 }
                 if (entry.getFavor_flag() == 1) {
                     likeButton.setLiked(true);
