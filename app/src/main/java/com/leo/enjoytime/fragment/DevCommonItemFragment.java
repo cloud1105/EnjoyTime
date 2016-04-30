@@ -18,7 +18,8 @@ import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.GanhuoEntry;
+import com.leo.enjoytime.model.JsonEntry;
 import com.leo.enjoytime.network.AbstractNewWorkerManager;
 import com.leo.enjoytime.network.NetWorkCallback;
 import com.leo.enjoytime.utils.LogUtils;
@@ -85,7 +86,7 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                List<Entry> list = dbManager.getDataList(Const.LIMIT_COUNT, 0, articleType);
+                List<GanhuoEntry> list = dbManager.getDataList(Const.LIMIT_COUNT, 0, articleType);
                 if (list != null && list.size() != 0) {
                     adapter.addItems(list);
                     hasLoadPage = 1;
@@ -112,7 +113,7 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
         adapter = new GanhuoRcyAdapter(context);
         adapter.setItemClickListener(new OnItemClickListener() {
             @Override
-            public void onItemclick(View view, final Entry entry) {
+            public void onItemclick(View view, final GanhuoEntry entry) {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -172,19 +173,16 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
     }
 
     @Override
-    public void onSuccess(List<Entry> list) {
+    public void onSuccess(List<? extends JsonEntry> list) {
         if (list == null || list.size() == 0) {
             swipeRefreshLayout.setRefreshing(false);
             return;
         }
-        adapter.addItems(list);
+        adapter.addItems((List<GanhuoEntry>)list);
         if (list.size() == Const.LIMIT_COUNT) {
             isLoadMore = true;
         } else {
             isLoadMore = false;
-        }
-        if (newWorkerManager.isNew || 1 == hasLoadPage){
-            Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
         }
         if (swipeRefreshLayout.isRefreshing()){
             swipeRefreshLayout.setRefreshing(false);
@@ -192,19 +190,19 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
     }
 
     @Override
-    public void onError(Exception e) {
+    public void onError(String errorMsg) {
         swipeRefreshLayout.setRefreshing(false);
         Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-        LogUtils.loggerE(TAG, "request error, msg :" + e.getLocalizedMessage());
+        LogUtils.loggerE(TAG, "request error, msg :" + errorMsg);
     }
 
     public interface OnItemClickListener {
-        void onItemclick(View view, Entry entry);
+        void onItemclick(View view, GanhuoEntry entry);
     }
 
     private class GanhuoRcyAdapter extends RecyclerView.Adapter<GanhuoRcyAdapter.ViewHolder> {
         private Context context;
-        List<Entry> entryList = new ArrayList<>();
+        List<GanhuoEntry> entryList = new ArrayList<>();
         private OnItemClickListener itemClickListener;
 
         public void setItemClickListener(OnItemClickListener itemClickListener) {
@@ -219,9 +217,12 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
             entryList.clear();
         }
 
-        public void addItems(List<Entry> list) {
+        public void addItems(List<GanhuoEntry> list) {
             entryList.addAll(list);
             notifyDataSetChanged();
+            if (newWorkerManager.isNew || 1 == hasLoadPage){
+                Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
+            }
         }
 
 
@@ -233,7 +234,7 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
 
         @Override
         public void onBindViewHolder(final GanhuoRcyAdapter.ViewHolder holder, final int position) {
-            final Entry entry = entryList.get(position);
+            final GanhuoEntry entry = entryList.get(position);
             itemClickListener.onItemclick(holder.itemView, entry);
             holder.bindData(entry);
         }
@@ -248,8 +249,8 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
             private TextView date;
             private LikeButton likeButton;
 
-            void bindData(final Entry entry) {
-                String dateStr = entry.getCreate_at();
+            void bindData(final GanhuoEntry entry) {
+                String dateStr = entry.getPublishedAt();
                 String text = entry.getDesc();
                 Date temp = Utils.formatDateFromStr(dateStr);
                 String formatDate = Utils.getFormatDateStr(temp);

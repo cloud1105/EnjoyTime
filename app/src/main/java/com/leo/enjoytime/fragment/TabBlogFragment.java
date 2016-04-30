@@ -16,7 +16,7 @@ import com.leo.enjoytime.R;
 import com.leo.enjoytime.activity.AtomActivity;
 import com.leo.enjoytime.activity.RssReaderActivity;
 import com.leo.enjoytime.activity.WebViewActivity;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.BlogEntry;
 import com.leo.enjoytime.view.DividerItemDecoration;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -43,8 +43,8 @@ public class TabBlogFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         XmlResourceParser parser = getResources().getXml(R.xml.blog_list);
-        List<Entry> blogList = new ArrayList<>();
-        Entry entry = null;
+        List<BlogEntry> blogList = new ArrayList<>();
+        BlogEntry entry = null;
         try {
             int eventType = parser.getEventType();
             while (eventType != XmlResourceParser.END_DOCUMENT){
@@ -52,7 +52,7 @@ public class TabBlogFragment extends Fragment {
                     String name = parser.getName();
                     switch (name){
                         case "item":
-                            entry = new Entry();
+                            entry = new BlogEntry();
                             //读取xml属性
                             String intentClass = parser.getAttributeValue(null,"class");
                             if (intentClass.equalsIgnoreCase("rss")){
@@ -117,9 +117,9 @@ public class TabBlogFragment extends Fragment {
 
     class BlogAdapter extends RecyclerView.Adapter<BlogAdapter.ViewHolder>{
 
-        private List<Entry> list;
+        private List<BlogEntry> list;
 
-        public void setList(List<Entry> list) {
+        public void setList(List<BlogEntry> list) {
             this.list = list;
             notifyDataSetChanged();
         }
@@ -153,7 +153,7 @@ public class TabBlogFragment extends Fragment {
                 txvDesc = (TextView) itemView.findViewById(R.id.txv_desc);
             }
 
-            public void bindData(final Entry entry){
+            public void bindData(final BlogEntry entry){
                 if (entry == null){
                     return;
                 }

@@ -21,7 +21,8 @@ import com.leo.enjoytime.R;
 import com.leo.enjoytime.activity.ImageViewActivity;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.GanhuoEntry;
+import com.leo.enjoytime.model.JsonEntry;
 import com.leo.enjoytime.network.AbstractNewWorkerManager;
 import com.leo.enjoytime.network.NetWorkCallback;
 import com.leo.enjoytime.utils.LogUtils;
@@ -112,7 +113,7 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
         );
         meizhiAdapter.setItemClickListener(new OnItemClickListener() {
             @Override
-            public void onItemclick(View view, final Entry entry) {
+            public void onItemclick(View view, final GanhuoEntry entry) {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -124,7 +125,7 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                List<Entry> list = dbManager.getDataList(Const.LIMIT_COUNT, 0, Const.REQUEST_TYPE_MEIZHI);
+                List<GanhuoEntry> list = dbManager.getDataList(Const.LIMIT_COUNT, 0, Const.REQUEST_TYPE_MEIZHI);
                 if (list != null && list.size() != 0) {
                     meizhiAdapter.addItems(list);
                     hasLoadPage = 1;
@@ -166,8 +167,8 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
     }
 
     @Override
-    public void onSuccess(List<Entry> list) {
-        meizhiAdapter.addItems(list);
+    public void onSuccess(List<? extends JsonEntry> list) {
+        meizhiAdapter.addItems((List<GanhuoEntry>) list);
         if (list.size() == Const.LIMIT_COUNT) {
             isLoadMore = true;
         } else {
@@ -180,15 +181,15 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
     }
 
     @Override
-    public void onError(Exception e) {
+    public void onError(String errorMsg) {
         refreshLayout.setRefreshing(false);
         Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-        LogUtils.loggerE(TAG, "send volley request error, msg :" + e.getLocalizedMessage());
+        LogUtils.loggerE(TAG, "send volley request error, msg :" + errorMsg);
     }
 
     private class MeizhiAdapter extends RecyclerView.Adapter<MeizhiAdapter.VH> {
         private Context context;
-        List<Entry> entryList = new ArrayList<>();
+        List<GanhuoEntry> entryList = new ArrayList<>();
         private OnItemClickListener itemClickListener;
 
         public void setItemClickListener(OnItemClickListener itemClickListener) {
@@ -203,7 +204,7 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
             entryList.clear();
         }
 
-        public void addItems(List<Entry> list) {
+        public void addItems(List<GanhuoEntry> list) {
             entryList.addAll(list);
             notifyDataSetChanged();
         }
@@ -211,7 +212,7 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
         public ArrayList getMeiZhiUrlList(){
             ArrayList list = new ArrayList();
             for (int i = 0;i<entryList.size();i++){
-               Entry entry = entryList.get(i);
+                GanhuoEntry entry = entryList.get(i);
                list.add(i, entry.getUrl());
             }
             return list;
@@ -242,13 +243,13 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
                 imageView = (ImageView) itemView.findViewById(R.id.img_meizhi);
             }
 
-            void bindData(Entry entry) {
-                newWorkerManager.setMeizhiImg(imageView, entry.getUrl(),MeiZhiItemFragment.this);
+            void bindData(GanhuoEntry entry) {
+                newWorkerManager.setMeizhiImg(getContext(),imageView, entry.getUrl(),MeiZhiItemFragment.this);
             }
         }
     }
 
     public interface OnItemClickListener {
-        void onItemclick(View view, Entry entry);
+        void onItemclick(View view, GanhuoEntry entry);
     }
 }

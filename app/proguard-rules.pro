@@ -19,3 +19,12 @@
 -keep class com.github.moduth.blockcanary.ui.*
 -dontwarn com.tencent.bugly.**
 -keep public class com.tencent.bugly.**{*;}
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep public enum com.bumptech.glide.load.resource.bitmap.ImageHeaderParser$** {
+  **[] $VALUES;
+  public *;
+}

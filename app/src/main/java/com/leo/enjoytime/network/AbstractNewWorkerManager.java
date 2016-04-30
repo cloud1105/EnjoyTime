@@ -12,7 +12,8 @@ public abstract class AbstractNewWorkerManager {
 
     public static AbstractNewWorkerManager getInstance() {
         // TODO: 根据xml配置一个int值决定网络库实例 16/4/12
-        return new VolleyUtils();
+//        return new VolleyUtils();
+        return new RetrofitUtils();
     }
 
     public void setCallback(NetWorkCallback callback) {
@@ -25,7 +26,7 @@ public abstract class AbstractNewWorkerManager {
 
     public abstract void queryGanChai(String tag, int type, int page, int count,NetWorkCallback callback);
 
-    public abstract void setMeizhiImg(ImageView imageView, String url,NetWorkCallback callback);
+    public abstract void setMeizhiImg(Context context,ImageView imageView, String url,NetWorkCallback callback);
 
     public abstract void queryRssPage(String tag,String url,NetWorkCallback callback);
 

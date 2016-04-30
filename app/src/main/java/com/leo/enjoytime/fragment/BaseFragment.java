@@ -5,7 +5,7 @@ import android.os.Message;
 import android.support.v4.app.Fragment;
 
 import com.leo.enjoytime.App;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.GanhuoEntry;
 import com.squareup.leakcanary.RefWatcher;
 
 /**
@@ -19,7 +19,7 @@ public abstract class BaseFragment extends Fragment {
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case MSG_UPDATE_ENTRY:
-                    final Entry entry = msg.getData().getParcelable("entry");
+                    final GanhuoEntry entry = msg.getData().getParcelable("entry");
                     new Thread(new Runnable() {
                         @Override
                         public void run() {

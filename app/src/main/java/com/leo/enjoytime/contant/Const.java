@@ -5,16 +5,16 @@ package com.leo.enjoytime.contant;
  */
 public class Const {
   /*  for ganhuo  */
-  public final static String GANHUO_HOST_URL = "http://gank.io/api";
-  public final static String ANDROID_DATA_URL = GANHUO_HOST_URL +"/data/Android/";
-  public final static String IOS_DATA_URL = GANHUO_HOST_URL +"/data/iOS/";
-  public final static String MEIZHI_DATA_URL = GANHUO_HOST_URL +"/data/福利/";
-  public final static String ALL_DATA_URL = GANHUO_HOST_URL +"/data/all/";
+  public final static String GANHUO_HOST_URL = "http://gank.io/api/data";
+  public final static String ANDROID_DATA_URL = GANHUO_HOST_URL +"/Android/";
+  public final static String IOS_DATA_URL = GANHUO_HOST_URL +"/iOS/";
+  public final static String MEIZHI_DATA_URL = GANHUO_HOST_URL +"/福利/";
+  public final static String ALL_DATA_URL = GANHUO_HOST_URL +"/all/";
   public final static String QUERY_DATA_BY_DATE_URL = GANHUO_HOST_URL +"/day/";
   public final static String HISTORY_URL = GANHUO_HOST_URL +"/day/history ";
 
   /*  for ganchai  */
-  public static final String SERVER_API = "http://ganchai.sinaapp.com/api";
+  public static final String GANCHAI_HOST_API = "http://ganchai.sinaapp.com/api";
   public static final int DIGEST_TYPE_ANDROID = 1;
 
   public final static int LIMIT_COUNT = 10;
@@ -39,7 +39,7 @@ public class Const {
    */
 
   public static String getGanChaiDigestListUrl(int type,int page,int count) {
-    return SERVER_API + "/digest?t=" + type + "&p=" + page + "&size=" + count;
+    return GANCHAI_HOST_API + "/digest?t=" + type + "&p=" + page + "&size=" + count;
   }
 
 

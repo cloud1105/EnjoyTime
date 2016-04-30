@@ -13,7 +13,10 @@ import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.Atom;
+import com.leo.enjoytime.model.GanChaiEntry;
+import com.leo.enjoytime.model.GanhuoEntry;
+import com.leo.enjoytime.model.Rss;
 import com.leo.enjoytime.utils.BitmapCache;
 import com.leo.enjoytime.utils.LogUtils;
 
@@ -38,7 +41,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
     private Response.Listener listenerForGanhuo = new Response.Listener<JSONObject>() {
         @Override
         public void onResponse(JSONObject response) {
-            List<Entry> list = parseGanhuoEntryList(response);
+            List<GanhuoEntry> list = parseGanhuoEntryList(response);
             if (callback != null) {
                 callback.onSuccess(list);
             }
@@ -48,7 +51,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
     private Response.Listener listenerForGanChai = new Response.Listener<JSONObject>() {
         @Override
         public void onResponse(JSONObject response) {
-            List<Entry> list = parseGanChaiEntryList(response);
+            List<GanChaiEntry> list = parseGanChaiEntryList(response);
             if (callback != null) {
                 callback.onSuccess(list);
             }
@@ -58,7 +61,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
     private Response.Listener listenerForAtom =  new Response.Listener<XmlPullParser>() {
         @Override
         public void onResponse(XmlPullParser response) {
-            List<Entry> list = parseAtomXml(response);
+            List<Atom> list = parseAtomXml(response);
             if (callback != null) {
                 callback.onSuccess(list);
             }
@@ -68,7 +71,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
     private Response.Listener listenerForRss =  new Response.Listener<XmlPullParser>() {
         @Override
         public void onResponse(XmlPullParser response) {
-            List<Entry> list = parseRssXml(response);
+            List<Rss> list = parseRssXml(response);
             if (callback != null) {
                 callback.onSuccess(list);
             }
@@ -79,7 +82,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
         @Override
         public void onErrorResponse(VolleyError error) {
             if (callback != null) {
-                callback.onError(error);
+                callback.onError(error.getLocalizedMessage());
             }
         }
     };
@@ -103,7 +106,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
             case Const.REQUEST_TYPE_MEIZHI:
                 url = Const.MEIZHI_DATA_URL + count + "/" + page;
                 try {
-                    url = Const.GANHUO_HOST_URL + "/data/" + URLEncoder.encode("福利", "utf-8") + "/" + count + "/" + page;
+                    url = Const.GANHUO_HOST_URL + "/" + URLEncoder.encode("福利", "utf-8") + "/" + count + "/" + page;
                 } catch (UnsupportedEncodingException e) {
                     LogUtils.loggerE(TAG,e.getLocalizedMessage());
                 }
@@ -129,7 +132,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
     }
 
     @Override
-    public void setMeizhiImg(ImageView imageView, String url,NetWorkCallback callback) {
+    public void setMeizhiImg(Context context,ImageView imageView, String url,NetWorkCallback callback) {
         setCallback(callback);
         ImageLoader imageLoader = new ImageLoader(queue, new BitmapCache());
         ImageLoader.ImageListener listener = ImageLoader.getImageListener(imageView, R.drawable.default_image,R.drawable.default_image);
@@ -157,23 +160,23 @@ public class VolleyUtils extends AbstractNewWorkerManager {
         queue.cancelAll(tag);
     }
 
-    public List<Entry> parseGanhuoEntryList(JSONObject response) {
+    public List<GanhuoEntry> parseGanhuoEntryList(JSONObject response) {
         JSONArray array = parseJsonArrayFromUrlResponse(response);
         if (array == null || array.length() == 0) {
             return null;
         }
-        List<Entry> list = new ArrayList<>();
+        List<GanhuoEntry> list = new ArrayList<>();
         for (int i = 0; i < array.length(); i++) {
             JSONObject object;
             try {
                 object = array.getJSONObject(i);
-                Entry entry = new Entry();
+                GanhuoEntry entry = new GanhuoEntry();
                 entry.setUrl(object.getString("url"));
                 entry.setType(object.getString("type"));
                 entry.setDesc(object.getString("desc"));
-                entry.setCreate_at(object.getString("publishedAt"));
+                entry.setPublishedAt(object.getString("publishedAt"));
                 DBManager dbManager = App.getDbManager();
-                Entry entryInDb = dbManager.getDataByUrl(entry.getUrl());
+                GanhuoEntry entryInDb = dbManager.getDataByUrl(entry.getUrl());
                 if ( entryInDb == null) {
                     isNew = true;
                     entry.setFavor_flag(Const.UNLIKE);
@@ -191,9 +194,9 @@ public class VolleyUtils extends AbstractNewWorkerManager {
         return list;
     }
 
-    private List<Entry> parseGanChaiEntryList(JSONObject response) {
+    private List<GanChaiEntry> parseGanChaiEntryList(JSONObject response) {
         JSONArray array;
-        List<Entry> list = new ArrayList<>();
+        List<GanChaiEntry> list = new ArrayList<>();
         try {
             String result = response.getString("message");
             if ("Success".equals(result)) {
@@ -211,20 +214,20 @@ public class VolleyUtils extends AbstractNewWorkerManager {
                     JSONObject object;
                     try {
                         object = array.getJSONObject(i);
-                        Entry entry = new Entry();
-                        entry.setType(Const.DIGEST_TYPE_ANDROID + "");
-                        entry.setDigest_id(object.getInt("id"));
+                        GanChaiEntry entry = new GanChaiEntry();
+                        entry.setType(Const.DIGEST_TYPE_ANDROID);
+                        entry.setId(object.getInt("id")+"");
                         entry.setTitle(object.getString("title"));
                         entry.setSummary(object.getString("summary"));
-                        entry.setThumb_nail(object.getString("thumbnail"));
-                        entry.setUrl(object.getString("source"));
+                        entry.setThumbnail(object.getString("thumbnail"));
+                        entry.setSource(object.getString("source"));
                         entry.setFavor_flag(Const.UNLIKE);
                         DBManager dbManager = App.getDbManager();
-                        Entry entryInDb = dbManager.getDataByUrl(entry.getUrl());
+                        GanChaiEntry entryInDb = dbManager.getDigestByUrl(entry.getSource());
                         if ( entryInDb == null) {
                             isNew = true;
                             entry.setFavor_flag(Const.UNLIKE);
-                            dbManager.insertData(entry);
+                            dbManager.insertDigest(entry);
                         }else{
                             entry.setFavor_flag(entryInDb.getFavor_flag());
                         }
@@ -267,9 +270,9 @@ public class VolleyUtils extends AbstractNewWorkerManager {
         return array;
     }
 
-    private ArrayList<Entry> parseAtomXml(XmlPullParser response) {
-        ArrayList<Entry> list = new ArrayList<>();
-        Entry entry = null;
+    private ArrayList<Atom> parseAtomXml(XmlPullParser response) {
+        ArrayList<Atom> list = new ArrayList<>();
+        Atom entry = null;
         try {
             int eventType = response.getEventType();
             while (XmlPullParser.END_DOCUMENT != eventType) {
@@ -277,15 +280,15 @@ public class VolleyUtils extends AbstractNewWorkerManager {
                     case XmlPullParser.START_TAG:
                         String tag = response.getName();
                         if ("entry".equalsIgnoreCase(tag)) {
-                            entry = new Entry();
+                            entry = new Atom();
 
                         } else if (entry != null) {
                             if ("title".equalsIgnoreCase(tag)) {
                                 entry.setTitle(new String(response.nextText().getBytes(), "UTF-8"));
                             } else if ("content".equalsIgnoreCase(tag)) {
-                                entry.setDesc(new String(response.nextText().getBytes(), "UTF-8"));
+                                entry.setContent(new String(response.nextText().getBytes(), "UTF-8"));
                             } else if ("link".equalsIgnoreCase(tag)) {
-                                entry.setUrl(response.getAttributeValue(null, "href"));
+                                entry.setLink(response.getAttributeValue(null, "href"));
                             }
                         }
                         break;
@@ -308,9 +311,9 @@ public class VolleyUtils extends AbstractNewWorkerManager {
         return list;
     }
 
-    private ArrayList<Entry> parseRssXml(XmlPullParser response) {
-        ArrayList<Entry> list = new ArrayList<>();
-        Entry entry = null;
+    private ArrayList<Rss> parseRssXml(XmlPullParser response) {
+        ArrayList<Rss> list = new ArrayList<>();
+        Rss entry = null;
         try {
             int eventType = response.getEventType();
             while(XmlPullParser.END_DOCUMENT != eventType){
@@ -318,15 +321,15 @@ public class VolleyUtils extends AbstractNewWorkerManager {
                     case XmlPullParser.START_TAG:
                         String tag = response.getName();
                         if ("item".equalsIgnoreCase(tag)){
-                            entry = new Entry();
+                            entry = new Rss();
 
                         }else if (entry != null){
                             if ("title".equalsIgnoreCase(tag)){
                                 entry.setTitle(new String(response.nextText().getBytes(),"UTF-8"));
                             }else if ("description".equalsIgnoreCase(tag)){
-                                entry.setDesc(new String(response.nextText().getBytes(),"UTF-8"));
+                                entry.setDescription(new String(response.nextText().getBytes(),"UTF-8"));
                             }else if ("link".equalsIgnoreCase(tag)){
-                                entry.setUrl(response.nextText());
+                                entry.setLink(response.nextText());
                             }
                         }
                         break;

@@ -1,6 +1,6 @@
 package com.leo.enjoytime.network;
 
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.JsonEntry;
 
 import java.util.List;
 
@@ -8,6 +8,6 @@ import java.util.List;
  * Created by leo on 16/4/12.
  */
 public interface NetWorkCallback {
-    void onSuccess(List<Entry> list);
-    void onError(Exception e);
+    void onSuccess(List<? extends JsonEntry> list);
+    void onError(String errorMsg);
 }

@@ -22,7 +22,8 @@ import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.GanChaiEntry;
+import com.leo.enjoytime.model.JsonEntry;
 import com.leo.enjoytime.network.AbstractNewWorkerManager;
 import com.leo.enjoytime.network.NetWorkCallback;
 import com.leo.enjoytime.utils.Utils;
@@ -125,11 +126,11 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
         adapter = new GanChaiRcvAdapter(context);
         adapter.setItemClickListener(new OnItemClickListener() {
             @Override
-            public void onItemclick(View view, final Entry entry) {
+            public void onItemclick(View view, final GanChaiEntry entry) {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Utils.gotoWebView(getActivity(), entry.getUrl());
+                        Utils.gotoWebView(getActivity(), entry.getSource());
                     }
                 });
             }
@@ -137,7 +138,7 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                List<Entry> list = dbManager.getDigestList(Const.LIMIT_COUNT, 0, String.valueOf(mType));
+                List<GanChaiEntry> list = dbManager.getDigestList(Const.LIMIT_COUNT, 0, String.valueOf(mType));
                 if (list != null && list.size() != 0) {
                     adapter.addItems(list);
                     hasLoadPage = 1;
@@ -171,11 +172,11 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
     }
 
     @Override
-    public void onSuccess(List<Entry> list) {
+    public void onSuccess(List<? extends JsonEntry> list) {
         if (list == null || list.size() == 0) {
             return;
         }
-        adapter.addItems(list);
+        adapter.addItems((List<GanChaiEntry>) list);
         if(list.size() == Const.LIMIT_COUNT) {
             isLoadMore = true;
         }else{
@@ -185,14 +186,14 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
     }
 
     @Override
-    public void onError(Exception e) {
+    public void onError(String errorMsg) {
         swipeRefreshLayout.setRefreshing(false);
         Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-        Log.e(TAG, "send volley request error, msg :" + e.getLocalizedMessage());
+        Log.e(TAG, "send volley request error, msg :" + errorMsg);
     }
 
     public interface OnItemClickListener {
-        void onItemclick(View view, Entry entry);
+        void onItemclick(View view, GanChaiEntry entry);
     }
 
     private class GanChaiRcvAdapter extends RecyclerView.Adapter<GanChaiRcvAdapter.ViewHolder>{
@@ -217,7 +218,7 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            final Entry entry = (Entry) digestList.get(position);
+            final GanChaiEntry entry = (GanChaiEntry) digestList.get(position);
             itemClickListener.onItemclick(holder.itemView, entry);
             holder.bind(entry);
         }
@@ -231,7 +232,7 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
             digestList.clear();
         }
 
-        public void addItems(List<Entry> list) {
+        public void addItems(List<GanChaiEntry> list) {
             digestList.addAll(list);
             notifyDataSetChanged();
         }
@@ -249,13 +250,13 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
                 likeButton = (LikeButton) itemView.findViewById(R.id.like_button);
             }
 
-            void bind(final Entry entry){
+            void bind(final GanChaiEntry entry){
                 txvTitle.setText(entry.getTitle());
                 if (!TextUtils.isEmpty(entry.getSummary())) {
                     txvSummary.setText(entry.getSummary());
                 }
-                if (!TextUtils.isEmpty(entry.getThumb_nail())){
-                    newWorkerManager.setMeizhiImg(imgThumbnail, entry.getThumb_nail(),GanChaiItemFragment.this);
+                if (!TextUtils.isEmpty(entry.getThumbnail())){
+                    newWorkerManager.setMeizhiImg(getContext(),imgThumbnail, entry.getThumbnail(),GanChaiItemFragment.this);
                 }
                 if (entry.getFavor_flag() == 1) {
                     likeButton.setLiked(true);

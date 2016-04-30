@@ -19,7 +19,9 @@ import android.widget.Toast;
 
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.Atom;
+import com.leo.enjoytime.model.BlogEntry;
+import com.leo.enjoytime.model.JsonEntry;
 import com.leo.enjoytime.network.AbstractNewWorkerManager;
 import com.leo.enjoytime.network.NetWorkCallback;
 import com.leo.enjoytime.utils.LogUtils;
@@ -45,7 +47,7 @@ public class AtomActivity extends AppCompatActivity implements NetWorkCallback{
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case CONVERT_XML_TO_ENTRY:
-                    List<Entry> list = msg.getData().getParcelableArrayList("list");
+                    List<BlogEntry> list = msg.getData().getParcelableArrayList("list");
                     if (list != null && list.size() != 0) {
                         if (adapter == null) {
                             adapter = new RssReaderAdapter();
@@ -118,26 +120,26 @@ public class AtomActivity extends AppCompatActivity implements NetWorkCallback{
     }
 
     @Override
-    public void onSuccess(List<Entry> list) {
+    public void onSuccess(List<? extends JsonEntry> list) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList("list", (ArrayList<Entry>) list);
+        bundle.putParcelableArrayList("list", (ArrayList<Atom>) list);
         msg.setData(bundle);
         msg.what = CONVERT_XML_TO_ENTRY;
         mHandler.sendMessage(msg);
     }
 
     @Override
-    public void onError(Exception e) {
+    public void onError(String errorMsg) {
         Toast.makeText(this, "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-        LogUtils.loggerE(TAG, "request error, msg :" + e.getLocalizedMessage());
+        LogUtils.loggerE(TAG, "request error, msg :" + errorMsg);
     }
 
     class RssReaderAdapter extends RecyclerView.Adapter<RssReaderAdapter.ViewHolder> {
 
-        private List<Entry> list;
+        private List<BlogEntry> list;
 
-        public void setList(List<Entry> list) {
+        public void setList(List<BlogEntry> list) {
             this.list = list;
             notifyDataSetChanged();
         }
@@ -172,7 +174,7 @@ public class AtomActivity extends AppCompatActivity implements NetWorkCallback{
                 txvDesc = (TextView) itemView.findViewById(R.id.txv_desc);
             }
 
-            public void bindData(final Entry entry) {
+            public void bindData(final BlogEntry entry) {
                 if (entry == null) {
                     return;
                 }
