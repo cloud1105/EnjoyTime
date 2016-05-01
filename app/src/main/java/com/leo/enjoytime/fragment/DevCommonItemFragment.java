@@ -161,8 +161,11 @@ public class DevCommonItemFragment extends Fragment implements DevCommonitemCont
     @Override
     public void showErrorView(String errorMsg) {
         swipeRefreshLayout.setRefreshing(false);
-        Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
         LogUtils.loggerE(TAG, "request error, msg :" + errorMsg);
+        if (getContext() == null){
+            return;
+        }
+        Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
     }
 
     @Override

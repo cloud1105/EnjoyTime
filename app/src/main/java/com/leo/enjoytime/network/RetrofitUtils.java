@@ -8,12 +8,10 @@ import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.model.Atom;
 import com.leo.enjoytime.model.GanChaiEntry;
-import com.leo.enjoytime.model.GanhuoEntry;
+import com.leo.enjoytime.model.GanhuoJsonEntry;
 import com.leo.enjoytime.model.Rss;
 import com.leo.enjoytime.utils.LogUtils;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 
@@ -36,32 +34,32 @@ public class RetrofitUtils extends AbstractNewWorkerManager {
     public void queryGanhuo(String tag, String type, int page, int count, final NetWorkCallback callback) {
         setCallback(callback);
         if (Const.REQUEST_TYPE_MEIZHI.equals(type)){
-            try {
-                type = URLEncoder.encode("福利", "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                LogUtils.loggerE(TAG,e.getLocalizedMessage());
-            }
+            type = "福利";
         }
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(Const.GANHUO_HOST_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-
         GanhuoService service = retrofit.create(GanhuoService.class);
 
-        Call<List<GanhuoEntry>> call  = service.ListGanhuoEntry(type,count,page);
+        Call<GanhuoJsonEntry> call  = service.getGanhuoEntry(type,count,page);
 
         calls.put(tag,call);
-
-        call.enqueue(new Callback<List<GanhuoEntry>>() {
+        if (callback == null){
+            LogUtils.loggerE(TAG,"callback is null");
+            return;
+        }
+        call.enqueue(new Callback<GanhuoJsonEntry>() {
             @Override
-            public void onResponse(Call<List<GanhuoEntry>> call, Response<List<GanhuoEntry>> response) {
-                callback.onSuccess(response.body());
+            public void onResponse(Call<GanhuoJsonEntry> call, Response<GanhuoJsonEntry> response) {
+                if (response.body()!= null && response.body().getResults()!= null) {
+                    callback.onSuccess(response.body().getResults());
+                }
             }
 
             @Override
-            public void onFailure(Call<List<GanhuoEntry>> call, Throwable t) {
+            public void onFailure(Call<GanhuoJsonEntry> call, Throwable t) {
                 callback.onError(t.getLocalizedMessage());
             }
         });

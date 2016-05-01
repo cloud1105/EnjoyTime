@@ -103,11 +103,7 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
                 new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
-                        if (refreshLayout.isRefreshing()) {
-                            return true;
-                        } else {
-                            return false;
-                        }
+                      return refreshLayout.isRefreshing();
                     }
                 }
         );
@@ -169,11 +165,7 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
     @Override
     public void onSuccess(List<? extends JsonEntry> list) {
         meizhiAdapter.addItems((List<GanhuoEntry>) list);
-        if (list.size() == Const.LIMIT_COUNT) {
-            isLoadMore = true;
-        } else {
-            isLoadMore = false;
-        }
+        isLoadMore = (list.size() == Const.LIMIT_COUNT);
         if (newWorkerManager.isNew && 1 == hasLoadPage){
             Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
         }
@@ -183,8 +175,11 @@ public class MeiZhiItemFragment extends BaseFragment implements NetWorkCallback{
     @Override
     public void onError(String errorMsg) {
         refreshLayout.setRefreshing(false);
-        Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
         LogUtils.loggerE(TAG, "send volley request error, msg :" + errorMsg);
+        if (getContext() == null){
+            return;
+        }
+        Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
     }
 
     private class MeizhiAdapter extends RecyclerView.Adapter<MeizhiAdapter.VH> {
