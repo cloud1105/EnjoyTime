@@ -2,9 +2,8 @@ package com.leo.enjoytime.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,14 +13,12 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
-import com.leo.enjoytime.db.DBManager;
 import com.leo.enjoytime.model.GanhuoEntry;
 import com.leo.enjoytime.model.JsonEntry;
-import com.leo.enjoytime.network.AbstractNewWorkerManager;
-import com.leo.enjoytime.network.NetWorkCallback;
+import com.leo.enjoytime.presenter.DevCommonItemPresenter;
+import com.leo.enjoytime.presenter.DevCommonitemContract;
 import com.leo.enjoytime.utils.LogUtils;
 import com.leo.enjoytime.utils.Utils;
 import com.leo.enjoytime.view.SwipyRefreshLayout;
@@ -37,18 +34,15 @@ import java.util.List;
  * android and ios's Fragment
  * Created by leo on 16/3/19.
  */
-public class DevCommonItemFragment extends BaseFragment implements NetWorkCallback {
+public class DevCommonItemFragment extends Fragment implements DevCommonitemContract.View {
     private static final String TAG = DevCommonItemFragment.class.getSimpleName();
     private static final String TYPE = "type";
     private String articleType;
     private SwipyRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
-    private DBManager dbManager;
-    private AbstractNewWorkerManager newWorkerManager;
     private GanhuoRcyAdapter adapter;
-    private int hasLoadPage = 0;
     private boolean isLoadMore = true;
-
+    private DevCommonitemContract.Presenter presenter;
 
     public DevCommonItemFragment() {
     }
@@ -76,39 +70,26 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
         }else{
             throw new IllegalArgumentException("no arguments find in DevCommonItemFragment");
         }
-        newWorkerManager = App.getNetWorkManager();
+        new DevCommonItemPresenter(this,articleType,TAG);
     }
 
 
     @Override
     public void onResume() {
         super.onResume();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                List<GanhuoEntry> list = dbManager.getDataList(Const.LIMIT_COUNT, 0, articleType);
-                if (list != null && list.size() != 0) {
-                    adapter.addItems(list);
-                    hasLoadPage = 1;
-                    swipeRefreshLayout.setRefreshing(false);
-                } else {
-                    loadNewData(true);
-                }
-            }
-        }, 200);
+        presenter.start();
     }
 
 
     @Override
     public void onPause() {
         super.onPause();
-        newWorkerManager.cancelQuery(TAG);
+        presenter.cancelQuery(TAG);
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        dbManager = App.getDbManager();
         Context context = getContext();
         adapter = new GanhuoRcyAdapter(context);
         adapter.setItemClickListener(new OnItemClickListener() {
@@ -127,18 +108,6 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
         recyclerView.setHasFixedSize(true);
     }
 
-
-    private void loadNewData(boolean isNew) {
-        if (isNew) {
-            adapter.clearList();
-            hasLoadPage = 1;
-        } else {
-            hasLoadPage++;
-        }
-        newWorkerManager.queryGanhuo(TAG, articleType, hasLoadPage, Const.LIMIT_COUNT,this);
-    }
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -149,10 +118,10 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
             @Override
             public void onRefresh(SwipyRefreshLayoutDirection direction) {
                 if (direction == SwipyRefreshLayoutDirection.TOP) {
-                    loadNewData(true);
+                    presenter.loadNewData(true);
                 } else if (direction == SwipyRefreshLayoutDirection.BOTTOM) {
                     if (isLoadMore) {
-                        loadNewData(false);
+                        presenter.loadNewData(false);
                     } else {
                         Snackbar.make(rootView, "没有更多数据了", Snackbar.LENGTH_SHORT).show();
                     }
@@ -173,7 +142,7 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
     }
 
     @Override
-    public void onSuccess(List<? extends JsonEntry> list) {
+    public void showSuccessView(List<? extends JsonEntry> list) {
         if (list == null || list.size() == 0) {
             swipeRefreshLayout.setRefreshing(false);
             return;
@@ -190,10 +159,35 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
     }
 
     @Override
-    public void onError(String errorMsg) {
+    public void showErrorView(String errorMsg) {
         swipeRefreshLayout.setRefreshing(false);
         Toast.makeText(getContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
         LogUtils.loggerE(TAG, "request error, msg :" + errorMsg);
+    }
+
+    @Override
+    public void showNewMsgView() {
+        Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showResumeView(List<GanhuoEntry> list) {
+        if (list != null && list.size() != 0) {
+            adapter.addItems(list);
+            swipeRefreshLayout.setRefreshing(false);
+        } else {
+            presenter.loadNewData(true);
+        }
+    }
+
+    @Override
+    public void clearList() {
+        adapter.clearList();
+    }
+
+    @Override
+    public void setPresenter(DevCommonitemContract.Presenter presenter) {
+        this.presenter = presenter;
     }
 
     public interface OnItemClickListener {
@@ -220,9 +214,7 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
         public void addItems(List<GanhuoEntry> list) {
             entryList.addAll(list);
             notifyDataSetChanged();
-            if (newWorkerManager.isNew || 1 == hasLoadPage){
-                Snackbar.make(recyclerView, R.string.snackbar_new_msg,Snackbar.LENGTH_SHORT).show();
-            }
+            presenter.incomingNewItem();
         }
 
 
@@ -264,22 +256,12 @@ public class DevCommonItemFragment extends BaseFragment implements NetWorkCallba
                 likeButton.setOnLikeListener(new OnLikeListener() {
                     @Override
                     public void liked(LikeButton likeButton) {
-                        entry.setFavor_flag(Const.LIKE);
-                        mHandler.removeMessages(MSG_UPDATE_ENTRY);
-                        Message message = Message.obtain();
-                        message.what = MSG_UPDATE_ENTRY;
-                        message.getData().putParcelable("entry",entry);
-                        mHandler.sendMessage(message);
+                        presenter.likeOrUnlike(Const.LIKE,entry);
                     }
 
                     @Override
                     public void unLiked(LikeButton likeButton) {
-                        entry.setFavor_flag(Const.UNLIKE);
-                        mHandler.removeMessages(MSG_UPDATE_ENTRY);
-                        Message message = Message.obtain();
-                        message.what = MSG_UPDATE_ENTRY;
-                        message.getData().putParcelable("entry",entry);
-                        mHandler.sendMessage(message);
+                        presenter.likeOrUnlike(Const.UNLIKE,entry);
                     }
                 });
             }

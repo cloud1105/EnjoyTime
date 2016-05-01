@@ -136,6 +136,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.about) {
 
         }
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer != null) {
             drawer.closeDrawer(GravityCompat.START);
