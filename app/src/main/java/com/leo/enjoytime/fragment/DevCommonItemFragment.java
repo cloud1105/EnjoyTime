@@ -131,12 +131,6 @@ public class DevCommonItemFragment extends Fragment implements DevCommonitemCont
         recyclerView = (RecyclerView) rootView.findViewById(R.id.recycle);
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
         // TODO: WiFi网络或数据网络打开时加载最新网络数据  16/4/12
-        swipeRefreshLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                swipeRefreshLayout.setRefreshing(true);
-            }
-        });
         return rootView;
 
     }
@@ -153,9 +147,7 @@ public class DevCommonItemFragment extends Fragment implements DevCommonitemCont
         } else {
             isLoadMore = false;
         }
-        if (swipeRefreshLayout.isRefreshing()){
-            swipeRefreshLayout.setRefreshing(false);
-        }
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     @Override

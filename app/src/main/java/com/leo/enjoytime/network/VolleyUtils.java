@@ -229,6 +229,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
                             entry.setFavor_flag(Const.UNLIKE);
                             dbManager.insertDigest(entry);
                         }else{
+                            isNew = false;
                             entry.setFavor_flag(entryInDb.getFavor_flag());
                         }
                         list.add(entry);
