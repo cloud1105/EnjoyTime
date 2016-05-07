@@ -15,7 +15,7 @@ import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.GanhuoEntry;
 import com.leo.enjoytime.utils.Utils;
 import com.leo.enjoytime.view.SwipyRefreshLayout;
 import com.leo.enjoytime.view.SwipyRefreshLayoutDirection;
@@ -43,7 +43,7 @@ public class FavoriteFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        manager = App.getDbmanager();
+        manager = App.getDbManager();
     }
 
     @Override
@@ -86,7 +86,7 @@ public class FavoriteFragment extends BaseFragment {
     }
 
     private void loadMoreData(View rootView) {
-        List<Entry> list = manager.getFavorlist(Const.LIMIT_COUNT, hasLoadPage);
+        List<GanhuoEntry> list = manager.getFavorlist(Const.LIMIT_COUNT, hasLoadPage);
         if (list !=null && list.size()!= 0){
             if (list.size()<Const.LIMIT_COUNT){
                 isLoadMore = false;
@@ -100,18 +100,18 @@ public class FavoriteFragment extends BaseFragment {
 
     class FavoriteItemAdapter extends RecyclerView.Adapter<FavoriteItemAdapter.ViewHolder>{
 
-        private List<Entry> sourceList;
+        private List<GanhuoEntry> sourceList;
 
-        public FavoriteItemAdapter(List<Entry> list){
+        public FavoriteItemAdapter(List<GanhuoEntry> list){
             this.sourceList = list;
         }
 
-        public void addMoreList(List<Entry> moreList) {
+        public void addMoreList(List<GanhuoEntry> moreList) {
             sourceList.addAll(moreList);
             notifyDataSetChanged();
         }
 
-        public void removeItem(Entry entry){
+        public void removeItem(GanhuoEntry entry){
             sourceList.remove(entry);
             notifyDataSetChanged();
         }
@@ -137,9 +137,9 @@ public class FavoriteFragment extends BaseFragment {
             private TextView txvDesc,txvCreateAt;
             private LikeButton btnLike;
 
-            void bindData(final Entry entry, final int position){
+            void bindData(final GanhuoEntry entry, final int position){
                 txvDesc.setText(entry.getDesc());
-                Date temp = Utils.formatDateFromStr(entry.getCreate_at());
+                Date temp = Utils.formatDateFromStr(entry.getPublishedAt());
                 String formatDate = Utils.getFormatDateStr(temp);
                 txvCreateAt.setText(formatDate);
                 itemView.setOnClickListener(new View.OnClickListener() {

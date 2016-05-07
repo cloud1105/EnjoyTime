@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,21 +19,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
+import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
-import com.leo.enjoytime.model.Entry;
-import com.leo.enjoytime.network.VolleyUtils;
+import com.leo.enjoytime.model.BlogEntry;
+import com.leo.enjoytime.model.Item;
+import com.leo.enjoytime.model.JsonEntry;
+import com.leo.enjoytime.network.AbstractNewWorkerManager;
+import com.leo.enjoytime.network.NetWorkCallback;
 import com.leo.enjoytime.utils.Utils;
 import com.leo.enjoytime.view.DividerItemDecoration;
 
 import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RssReaderActivity extends AppCompatActivity {
+public class RssReaderActivity extends AppCompatActivity implements NetWorkCallback{
 
     private final static String TAG = RssReaderActivity.class.getSimpleName();
     private String rssUrl;
@@ -44,18 +44,27 @@ public class RssReaderActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RssReaderAdapter adapter;
     private static final int CONVERT_XML_TO_ENTRY = 1;
+    private AbstractNewWorkerManager newWorkerManager;
     @SuppressWarnings("handlerleak")
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case CONVERT_XML_TO_ENTRY:
-                    List<Entry> list = msg.getData().getParcelableArrayList("list");
+                    List<Item> list = msg.getData().getParcelableArrayList("list");
                     if (list != null && list.size() != 0) {
                         if (adapter == null) {
                             adapter = new RssReaderAdapter();
                         }
-                        adapter.setList(list);
+                        List<BlogEntry> blogEntries = new ArrayList<>();
+                        for (Item i : list){
+                            BlogEntry blogEntry = new BlogEntry();
+                            blogEntry.setUrl(i.getLink());
+                            blogEntry.setDesc(i.getDescription());
+                            blogEntry.setTitle(i.getTitle());
+                            blogEntries.add(blogEntry);
+                        }
+                        adapter.setList(blogEntries);
                     }
 
                     setProgressBarIndeterminateVisibility(false);
@@ -99,84 +108,37 @@ public class RssReaderActivity extends AppCompatActivity {
             return;
         }
 
-        listener = new Response.Listener<XmlPullParser>() {
-            @Override
-            public void onResponse(final XmlPullParser response) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ArrayList<Entry> entryList = parseRssXml(response);
-                        Message msg = Message.obtain();
-                        msg.what = CONVERT_XML_TO_ENTRY;
-                        msg.getData().putParcelableArrayList("list",entryList);
-                        mHandler.sendMessage(msg);
-                    }
-                }).start();
-            }
-        };
-        errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "send volley request error, msg :" + error.getLocalizedMessage());
-            }
-        };
-        VolleyUtils.queryRssPage(TAG, rssUrl, listener, errorListener);
+        newWorkerManager = App.getNetWorkManager();
+        newWorkerManager.queryRssPage(TAG, rssUrl,this);
     }
 
-    @NonNull
-    private ArrayList<Entry> parseRssXml(XmlPullParser response) {
-        ArrayList<Entry> list = new ArrayList<>();
-        Entry entry = null;
-        try {
-            int eventType = response.getEventType();
-            while(XmlPullParser.END_DOCUMENT != eventType){
-                switch (eventType){
-                    case XmlPullParser.START_TAG:
-                        String tag = response.getName();
-                        if ("item".equalsIgnoreCase(tag)){
-                            entry = new Entry();
 
-                        }else if (entry != null){
-                            if ("title".equalsIgnoreCase(tag)){
-                                entry.setTitle(new String(response.nextText().getBytes(),"UTF-8"));
-                            }else if ("description".equalsIgnoreCase(tag)){
-                                entry.setDesc(new String(response.nextText().getBytes(),"UTF-8"));
-                            }else if ("link".equalsIgnoreCase(tag)){
-                                entry.setUrl(response.nextText());
-                            }
-                        }
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if (response.getName().equalsIgnoreCase("item") && entry != null) {
-                            list.add(entry);
-                            entry = null;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                eventType = response.next();
-            }
-        }catch (XmlPullParserException e) {
-            Log.e(TAG, "xml parse error :" + e.getLocalizedMessage());
-        } catch (IOException e) {
-            Log.e(TAG,"xml parse error IOException:"+e.getLocalizedMessage());
-        }
-        return list;
-    }
 
     @Override
     protected void onPause() {
         super.onPause();
-        VolleyUtils.cancelQuery(TAG);
+        newWorkerManager.cancelQuery(TAG);
+    }
+
+    @Override
+    public void onSuccess(List<? extends JsonEntry> list) {
+        Message msg = Message.obtain();
+        msg.what = CONVERT_XML_TO_ENTRY;
+        msg.getData().putParcelableArrayList("list", (ArrayList<Item>) list);
+        mHandler.sendMessage(msg);
+    }
+
+    @Override
+    public void onError(String errorMsg) {
+        Toast.makeText(getApplicationContext(), "网络错误，请检查网络后重试", Toast.LENGTH_SHORT).show();
+        Log.e(TAG, "send volley request error, msg :" + errorMsg);
     }
 
     class RssReaderAdapter extends RecyclerView.Adapter<RssReaderAdapter.ViewHolder>{
 
-        private List<Entry> list;
+        private List<BlogEntry> list;
 
-        public void setList(List<Entry> list) {
+        public void setList(List<BlogEntry> list) {
             this.list = list;
             notifyDataSetChanged();
         }
@@ -211,7 +173,7 @@ public class RssReaderActivity extends AppCompatActivity {
                 txvDesc = (TextView) itemView.findViewById(R.id.txv_desc);
             }
 
-            public void bindData(final Entry entry){
+            public void bindData(final BlogEntry entry){
                 if (entry == null){
                     return;
                 }

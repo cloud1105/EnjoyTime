@@ -6,7 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import com.leo.enjoytime.model.Entry;
+import com.leo.enjoytime.model.GanChaiEntry;
+import com.leo.enjoytime.model.GanhuoEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +24,13 @@ public class DBManager {
         dbHelper = EnjoyDataHelper.getInstance(context);
     }
 
-    public synchronized void insertData(Entry entry){
+    public synchronized void insertData(GanhuoEntry entry){
         db = dbHelper.getWritableDatabase();
         db.beginTransaction();
         ContentValues cv = new ContentValues();
         cv.put(EnjoyDataHelper.ITEM_COLUMN_URL, entry.getUrl());
         cv.put(EnjoyDataHelper.ITEM_COLUMN_TYPE, entry.getType());
-        cv.put(EnjoyDataHelper.ITEM_COLUMN_CREATE_AT, entry.getCreate_at());
+        cv.put(EnjoyDataHelper.ITEM_COLUMN_CREATE_AT, entry.getPublishedAt());
         cv.put(EnjoyDataHelper.ITEM_COLUMN_FAVOR, entry.getFavor_flag());
         cv.put(EnjoyDataHelper.ITEM_COLUMN_DESC, entry.getDesc());
         long result = db.replace(EnjoyDataHelper.TABLE_NAME_ITEM,null,cv);
@@ -42,16 +43,16 @@ public class DBManager {
         db.close();
     }
 
-    public synchronized void insertDigest(Entry entry){
+    public synchronized void insertDigest(GanChaiEntry entry){
         db = dbHelper.getWritableDatabase();
         db.beginTransaction();
         ContentValues cv = new ContentValues();
-        cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_ID, entry.getDigest_id());
-        cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_SOURCE_URL, entry.getUrl());
+        cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_ID, entry.getId());
+        cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_SOURCE_URL, entry.getSource());
         cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_TYPE, entry.getType());
         cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_SUMMARY, entry.getSummary());
         cv.put(EnjoyDataHelper.ITEM_COLUMN_FAVOR, entry.getFavor_flag());
-        cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_THUMBNAIL, entry.getThumb_nail());
+        cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_THUMBNAIL, entry.getThumbnail());
         cv.put(EnjoyDataHelper.ITEM_COLUMN_DIGEST_TITLE, entry.getTitle());
         long result = db.replace(EnjoyDataHelper.TABLE_NAME_DIGEST,null,cv);
         if(result != -1) {
@@ -63,7 +64,7 @@ public class DBManager {
         db.close();
     }
 
-    public synchronized void changeArticleToLikeOrUnlike(Entry entry){
+    public synchronized void changeArticleToLikeOrUnlike(GanhuoEntry entry){
         db = dbHelper.getWritableDatabase();
         db.beginTransaction();
         ContentValues cv = new ContentValues();
@@ -79,13 +80,13 @@ public class DBManager {
         db.close();
     }
 
-    public synchronized void changeDigestToLikeOrUnlike(Entry entry){
+    public synchronized void changeDigestToLikeOrUnlike(GanChaiEntry entry){
         db = dbHelper.getWritableDatabase();
         db.beginTransaction();
         ContentValues cv = new ContentValues();
         cv.put(EnjoyDataHelper.ITEM_COLUMN_FAVOR, entry.getFavor_flag());
         long result = db.update(EnjoyDataHelper.TABLE_NAME_DIGEST,cv,
-                EnjoyDataHelper.ITEM_COLUMN_DIGEST_SOURCE_URL +" = ?",new String[]{entry.getUrl()});
+                EnjoyDataHelper.ITEM_COLUMN_DIGEST_SOURCE_URL +" = ?",new String[]{entry.getSource()});
         if(result != -1) {
             db.setTransactionSuccessful();
         }else{
@@ -95,8 +96,8 @@ public class DBManager {
         db.close();
     }
 
-    public Entry getDataByUrl(String url){
-        Entry data = null;
+    public GanhuoEntry getDataByUrl(String url){
+        GanhuoEntry data = null;
         db = dbHelper.getReadableDatabase();
         String sql = "SELECT * FROM "+EnjoyDataHelper.TABLE_NAME_ITEM+" where "+EnjoyDataHelper.ITEM_COLUMN_URL+
                 " = ? ";
@@ -110,8 +111,8 @@ public class DBManager {
         return data;
     }
 
-    public Entry getDigestByUrl(String url){
-        Entry data = null;
+    public GanChaiEntry getDigestByUrl(String url){
+        GanChaiEntry data = null;
         db = dbHelper.getReadableDatabase();
         String sql = "SELECT * FROM "+EnjoyDataHelper.TABLE_NAME_DIGEST+" where "+EnjoyDataHelper.ITEM_COLUMN_DIGEST_SOURCE_URL+
                 " = ? ";
@@ -119,14 +120,14 @@ public class DBManager {
         Cursor cursor = db.rawQuery(sql, new String[]{url});
         if (cursor != null && cursor.getCount() != 0){
             cursor.moveToFirst();
-            data = cursorToData(cursor);
+            data = cursorToDigestData(cursor);
         }
         cursor.close();
         return data;
     }
 
-    public List<Entry> getDataList(int count,int pageSize,String type){
-        List<Entry> list = new ArrayList<>();
+    public List<GanhuoEntry> getDataList(int count,int pageSize,String type){
+        List<GanhuoEntry> list = new ArrayList<>();
         db = dbHelper.getReadableDatabase();
         //offset代表从第几条记录“之后“开始查询，limit表明查询多少条结果
         String sql = "SELECT * FROM " + EnjoyDataHelper.TABLE_NAME_ITEM +" where "+EnjoyDataHelper.ITEM_COLUMN_TYPE+
@@ -136,7 +137,7 @@ public class DBManager {
         if (cursor != null) {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
-                Entry data = cursorToData(cursor);
+                GanhuoEntry data = cursorToData(cursor);
                 list.add(data);
                 cursor.moveToNext();
             }
@@ -145,8 +146,8 @@ public class DBManager {
         return list;
     }
 
-    public List<Entry> getDigestList(int count,int pageSize,String type){
-        List<Entry> list = new ArrayList<>();
+    public List<GanChaiEntry> getDigestList(int count,int pageSize,String type){
+        List<GanChaiEntry> list = new ArrayList<>();
         db = dbHelper.getReadableDatabase();
         //offset代表从第几条记录“之后“开始查询，limit表明查询多少条结果
         String sql = "SELECT * FROM " + EnjoyDataHelper.TABLE_NAME_DIGEST +" where "+EnjoyDataHelper.ITEM_COLUMN_TYPE+
@@ -156,7 +157,7 @@ public class DBManager {
         if (cursor != null) {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
-                Entry data = cursorToData(cursor);
+                GanChaiEntry data = cursorToDigestData(cursor);
                 list.add(data);
                 cursor.moveToNext();
             }
@@ -165,8 +166,8 @@ public class DBManager {
         return list;
     }
 
-    public List<Entry> getFavorlist(int count,int pageSize) {
-        List<Entry> list = new ArrayList<>();
+    public List<GanhuoEntry> getFavorlist(int count, int pageSize) {
+        List<GanhuoEntry> list = new ArrayList<>();
         db = dbHelper.getReadableDatabase();
         //offset代表从第几条记录“之后“开始查询，limit表明查询多少条结果
         String sql = "SELECT DESC,CREATE_AT,URL FROM " + EnjoyDataHelper.TABLE_NAME_ITEM +" where "+EnjoyDataHelper.ITEM_COLUMN_FAVOR+
@@ -176,7 +177,7 @@ public class DBManager {
         if (cursor != null) {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
-                Entry data = cursorToData(cursor);
+                GanhuoEntry data = cursorToData(cursor);
                 list.add(data);
                 cursor.moveToNext();
             }
@@ -185,8 +186,8 @@ public class DBManager {
         return list;
     }
 
-    private Entry cursorToDigestData(Cursor cursor) {
-        Entry entry = new Entry();
+    private GanChaiEntry cursorToDigestData(Cursor cursor) {
+        GanChaiEntry entry = new GanChaiEntry();
         int id = cursor.getInt(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_DIGEST_ID));
         String type = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_DIGEST_TYPE));
         String url = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_DIGEST_SOURCE_URL));
@@ -194,11 +195,16 @@ public class DBManager {
         int favor_flag = cursor.getInt(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_FAVOR));
         String thumbnail = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_DIGEST_THUMBNAIL));
         String title = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_DIGEST_TITLE));
+        entry.setSource(url);
+        entry.setSummary(summary);
+        entry.setFavor_flag(favor_flag);
+        entry.setThumbnail(thumbnail);
+        entry.setTitle(title);
         return  entry;
     }
 
-    private Entry cursorToData(Cursor cursor) {
-        Entry entry = new Entry();
+    private GanhuoEntry cursorToData(Cursor cursor) {
+        GanhuoEntry entry = new GanhuoEntry();
         if (cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_TYPE) != -1) {
             String type = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_TYPE));
             entry.setType(type);
@@ -212,7 +218,7 @@ public class DBManager {
         String create_at = cursor.getString(cursor.getColumnIndex(EnjoyDataHelper.ITEM_COLUMN_CREATE_AT));
         entry.setUrl(url);
         entry.setDesc(desc);
-        entry.setCreate_at(create_at);
+        entry.setPublishedAt(create_at);
         return entry;
     }
 
