@@ -19,7 +19,7 @@ import android.widget.Toast;
 
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
-import com.leo.enjoytime.model.Atom;
+import com.leo.enjoytime.model.AtomItem;
 import com.leo.enjoytime.model.BlogEntry;
 import com.leo.enjoytime.model.JsonEntry;
 import com.leo.enjoytime.network.AbstractNewWorkerManager;
@@ -47,12 +47,20 @@ public class AtomActivity extends AppCompatActivity implements NetWorkCallback{
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case CONVERT_XML_TO_ENTRY:
-                    List<BlogEntry> list = msg.getData().getParcelableArrayList("list");
+                    List<AtomItem> list = msg.getData().getParcelableArrayList("list");
                     if (list != null && list.size() != 0) {
                         if (adapter == null) {
                             adapter = new RssReaderAdapter();
                         }
-                        adapter.setList(list);
+                        List<BlogEntry> blogEntries = new ArrayList<>();
+                        for (AtomItem i : list){
+                            BlogEntry blogEntry = new BlogEntry();
+                            blogEntry.setUrl(i.getHref());
+                            blogEntry.setDesc(i.getContent());
+                            blogEntry.setTitle(i.getTitle());
+                            blogEntries.add(blogEntry);
+                        }
+                        adapter.setList(blogEntries);
                     }
                     break;
                 default:
@@ -123,7 +131,7 @@ public class AtomActivity extends AppCompatActivity implements NetWorkCallback{
     public void onSuccess(List<? extends JsonEntry> list) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList("list", (ArrayList<Atom>) list);
+        bundle.putParcelableArrayList("list", (ArrayList<AtomItem>) list);
         msg.setData(bundle);
         msg.what = CONVERT_XML_TO_ENTRY;
         mHandler.sendMessage(msg);

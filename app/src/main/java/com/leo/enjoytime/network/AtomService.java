@@ -2,12 +2,11 @@ package com.leo.enjoytime.network;
 
 import com.leo.enjoytime.model.Atom;
 
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Url;
 
 public interface AtomService {
     @GET
-    Call<List<Atom>> getAtomList();
+    Call<Atom> getAtom(@Url String url);
 }

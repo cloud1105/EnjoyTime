@@ -13,10 +13,10 @@ import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.db.DBManager;
-import com.leo.enjoytime.model.Atom;
+import com.leo.enjoytime.model.AtomItem;
 import com.leo.enjoytime.model.GanChaiEntry;
 import com.leo.enjoytime.model.GanhuoEntry;
-import com.leo.enjoytime.model.Rss;
+import com.leo.enjoytime.model.Item;
 import com.leo.enjoytime.utils.BitmapCache;
 import com.leo.enjoytime.utils.LogUtils;
 
@@ -61,7 +61,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
     private Response.Listener listenerForAtom =  new Response.Listener<XmlPullParser>() {
         @Override
         public void onResponse(XmlPullParser response) {
-            List<Atom> list = parseAtomXml(response);
+            List<AtomItem> list = parseAtomXml(response);
             if (callback != null) {
                 callback.onSuccess(list);
             }
@@ -71,7 +71,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
     private Response.Listener listenerForRss =  new Response.Listener<XmlPullParser>() {
         @Override
         public void onResponse(XmlPullParser response) {
-            List<Rss> list = parseRssXml(response);
+            List<Item> list = parseRssXml(response);
             if (callback != null) {
                 callback.onSuccess(list);
             }
@@ -271,9 +271,9 @@ public class VolleyUtils extends AbstractNewWorkerManager {
         return array;
     }
 
-    private ArrayList<Atom> parseAtomXml(XmlPullParser response) {
-        ArrayList<Atom> list = new ArrayList<>();
-        Atom entry = null;
+    private ArrayList<AtomItem> parseAtomXml(XmlPullParser response) {
+        ArrayList<AtomItem> list = new ArrayList<>();
+        AtomItem entry = null;
         try {
             int eventType = response.getEventType();
             while (XmlPullParser.END_DOCUMENT != eventType) {
@@ -281,7 +281,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
                     case XmlPullParser.START_TAG:
                         String tag = response.getName();
                         if ("entry".equalsIgnoreCase(tag)) {
-                            entry = new Atom();
+                            entry = new AtomItem();
 
                         } else if (entry != null) {
                             if ("title".equalsIgnoreCase(tag)) {
@@ -312,9 +312,9 @@ public class VolleyUtils extends AbstractNewWorkerManager {
         return list;
     }
 
-    private ArrayList<Rss> parseRssXml(XmlPullParser response) {
-        ArrayList<Rss> list = new ArrayList<>();
-        Rss entry = null;
+    private ArrayList<Item> parseRssXml(XmlPullParser response) {
+        ArrayList<Item> list = new ArrayList<>();
+        Item entry = null;
         try {
             int eventType = response.getEventType();
             while(XmlPullParser.END_DOCUMENT != eventType){
@@ -322,7 +322,7 @@ public class VolleyUtils extends AbstractNewWorkerManager {
                     case XmlPullParser.START_TAG:
                         String tag = response.getName();
                         if ("item".equalsIgnoreCase(tag)){
-                            entry = new Rss();
+                            entry = new Item();
 
                         }else if (entry != null){
                             if ("title".equalsIgnoreCase(tag)){

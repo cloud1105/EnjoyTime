@@ -176,6 +176,7 @@ public class GanChaiItemFragment extends BaseFragment implements NetWorkCallback
         if (list == null || list.size() == 0) {
             return;
         }
+
         adapter.addItems((List<GanChaiEntry>) list);
         if(list.size() == Const.LIMIT_COUNT) {
             isLoadMore = true;

@@ -7,13 +7,13 @@ import com.bumptech.glide.Glide;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.contant.Const;
 import com.leo.enjoytime.model.Atom;
-import com.leo.enjoytime.model.GanChaiEntry;
+import com.leo.enjoytime.model.GanChaiJsonDataEntry;
+import com.leo.enjoytime.model.GanChaiJsonEntry;
 import com.leo.enjoytime.model.GanhuoJsonEntry;
 import com.leo.enjoytime.model.Rss;
 import com.leo.enjoytime.utils.LogUtils;
 
 import java.util.HashMap;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -75,18 +75,26 @@ public class RetrofitUtils extends AbstractNewWorkerManager {
                 .build();
         GanchaiService service = retrofit.create(GanchaiService.class);
 
-        Call<List<GanChaiEntry>> call  = service.ListGanchaiEntry(type,count,page);
+        Call<GanChaiJsonEntry> call  = service.getGanchaiJsonEntry(type,count,page);
 
         calls.put(tag,call);
 
-        call.enqueue(new Callback<List<GanChaiEntry>>() {
+        call.enqueue(new Callback<GanChaiJsonEntry>() {
             @Override
-            public void onResponse(Call<List<GanChaiEntry>> call, Response<List<GanChaiEntry>> response) {
-                    callback.onSuccess(response.body());
+            public void onResponse(Call<GanChaiJsonEntry> call, Response<GanChaiJsonEntry> response) {
+                if (response.body()!= null) {
+                    GanChaiJsonEntry jsonEntry = response.body();
+                    if (jsonEntry != null && jsonEntry.getData()!= null){
+                        GanChaiJsonDataEntry dataEntry = jsonEntry.getData();
+                        if (dataEntry != null && dataEntry.getResult() != null){
+                            callback.onSuccess(response.body().getData().getResult());
+                        }
+                    }
+                }
             }
 
             @Override
-            public void onFailure(Call<List<GanChaiEntry>> call, Throwable t) {
+            public void onFailure(Call<GanChaiJsonEntry> call, Throwable t) {
                     callback.onError(t.getLocalizedMessage());
             }
         });
@@ -106,21 +114,21 @@ public class RetrofitUtils extends AbstractNewWorkerManager {
     public void queryRssPage(String tag, String url, final NetWorkCallback callback) {
         setCallback(callback);
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url)
+                .baseUrl("http://www.android.com/")
                 .addConverterFactory(SimpleXmlConverterFactory.create())
                 .build();
 
         RssService rssService = retrofit.create(RssService.class);
-        Call<List<Rss>> call =  rssService.getRssList();
+        Call<Rss> call =  rssService.getRss(url);
         calls.put(tag,call);
-        call.enqueue(new Callback<List<Rss>>() {
+        call.enqueue(new Callback<Rss>() {
             @Override
-            public void onResponse(Call<List<Rss>> call, Response<List<Rss>> response) {
-                callback.onSuccess(response.body());
+            public void onResponse(Call<Rss> call, Response<Rss> response) {
+                callback.onSuccess(response.body().getChannel().getItems());
             }
 
             @Override
-            public void onFailure(Call<List<Rss>> call, Throwable t) {
+            public void onFailure(Call<Rss> call, Throwable t) {
                 callback.onError(t.getLocalizedMessage());
             }
         });
@@ -131,21 +139,21 @@ public class RetrofitUtils extends AbstractNewWorkerManager {
     public void queryAtomPage(String tag, String url, final NetWorkCallback callback) {
         setCallback(callback);
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url)
+                .baseUrl("http://www.android.com/")
                 .addConverterFactory(SimpleXmlConverterFactory.create())
                 .build();
 
         AtomService atomService = retrofit.create(AtomService.class);
-        Call<List<Atom>> call =  atomService.getAtomList();
+        Call<Atom> call =  atomService.getAtom(url);
         calls.put(tag,call);
-        call.enqueue(new Callback<List<Atom>>() {
+        call.enqueue(new Callback<Atom>() {
             @Override
-            public void onResponse(Call<List<Atom>> call, Response<List<Atom>> response) {
-                callback.onSuccess(response.body());
+            public void onResponse(Call<Atom> call, Response<Atom> response) {
+                callback.onSuccess(response.body().getItems());
             }
 
             @Override
-            public void onFailure(Call<List<Atom>> call, Throwable t) {
+            public void onFailure(Call<Atom> call, Throwable t) {
                 callback.onError(t.getLocalizedMessage());
             }
         });

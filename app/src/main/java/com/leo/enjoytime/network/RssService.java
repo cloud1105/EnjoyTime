@@ -2,12 +2,11 @@ package com.leo.enjoytime.network;
 
 import com.leo.enjoytime.model.Rss;
 
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Url;
 
 public interface RssService {
     @GET
-    Call<List<Rss>> getRssList();
+    Call<Rss> getRss(@Url String url);
 }

@@ -22,8 +22,8 @@ import com.android.volley.Response;
 import com.leo.enjoytime.App;
 import com.leo.enjoytime.R;
 import com.leo.enjoytime.model.BlogEntry;
+import com.leo.enjoytime.model.Item;
 import com.leo.enjoytime.model.JsonEntry;
-import com.leo.enjoytime.model.Rss;
 import com.leo.enjoytime.network.AbstractNewWorkerManager;
 import com.leo.enjoytime.network.NetWorkCallback;
 import com.leo.enjoytime.utils.Utils;
@@ -51,12 +51,20 @@ public class RssReaderActivity extends AppCompatActivity implements NetWorkCallb
         public void handleMessage(Message msg) {
             switch (msg.what){
                 case CONVERT_XML_TO_ENTRY:
-                    List<BlogEntry> list = msg.getData().getParcelableArrayList("list");
+                    List<Item> list = msg.getData().getParcelableArrayList("list");
                     if (list != null && list.size() != 0) {
                         if (adapter == null) {
                             adapter = new RssReaderAdapter();
                         }
-                        adapter.setList(list);
+                        List<BlogEntry> blogEntries = new ArrayList<>();
+                        for (Item i : list){
+                            BlogEntry blogEntry = new BlogEntry();
+                            blogEntry.setUrl(i.getLink());
+                            blogEntry.setDesc(i.getDescription());
+                            blogEntry.setTitle(i.getTitle());
+                            blogEntries.add(blogEntry);
+                        }
+                        adapter.setList(blogEntries);
                     }
 
                     setProgressBarIndeterminateVisibility(false);
@@ -116,7 +124,7 @@ public class RssReaderActivity extends AppCompatActivity implements NetWorkCallb
     public void onSuccess(List<? extends JsonEntry> list) {
         Message msg = Message.obtain();
         msg.what = CONVERT_XML_TO_ENTRY;
-        msg.getData().putParcelableArrayList("list", (ArrayList<Rss>) list);
+        msg.getData().putParcelableArrayList("list", (ArrayList<Item>) list);
         mHandler.sendMessage(msg);
     }
 
